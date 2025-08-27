@@ -1,0 +1,21 @@
+RewriteEngine On
+
+# Redireccionar todo a index.php si el archivo/directorio no existe
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [QSA,L]
+
+# Configuraciones básicas de seguridad (simplificadas para MAMP)
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options nosniff
+    Header always set X-Frame-Options SAMEORIGIN
+</IfModule>
+
+# Proteger archivos sensibles
+<Files "*.sql">
+    Require all denied
+</Files>
+
+<Files "*.backup">
+    Require all denied
+</Files> 

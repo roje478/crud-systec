@@ -1,0 +1,45 @@
+# Permitir acceso a archivos de imagen
+<FilesMatch "\.(jpg|jpeg|png|gif|webp|ico|svg)$">
+    Order Allow,Deny
+    Allow from all
+</FilesMatch>
+
+# Configurar tipos MIME para imágenes
+<IfModule mod_mime.c>
+    AddType image/jpeg .jpg .jpeg
+    AddType image/png .png
+    AddType image/gif .gif
+    AddType image/webp .webp
+    AddType image/x-icon .ico
+    AddType image/svg+xml .svg
+</IfModule>
+
+# Configurar cache para imágenes (opcional)
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/gif "access plus 1 month"
+    ExpiresByType image/webp "access plus 1 month"
+    ExpiresByType image/svg+xml "access plus 1 month"
+</IfModule>
+
+# Permitir acceso a directorios de assets
+<Directory "app/assets">
+    Options Indexes FollowSymLinks
+    AllowOverride All
+    Require all granted
+</Directory>
+
+# Configuración específica para el directorio de logos
+<Directory "app/assets/images/logos">
+    Options Indexes FollowSymLinks
+    AllowOverride All
+    Require all granted
+    
+    # Permitir acceso directo a archivos de imagen
+    <FilesMatch "\.(jpg|jpeg|png|gif|webp|ico)$">
+        Require all granted
+    </FilesMatch>
+</Directory>
+

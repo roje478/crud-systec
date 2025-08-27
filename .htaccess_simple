@@ -1,0 +1,18 @@
+# Permitir acceso a archivos de imagen
+<FilesMatch "\.(jpg|jpeg|png|gif|webp|ico|svg)$">
+    Require all granted
+</FilesMatch>
+
+# Configurar tipos MIME
+AddType image/jpeg .jpg .jpeg
+AddType image/png .png
+AddType image/gif .gif
+AddType image/webp .webp
+AddType image/x-icon .ico
+AddType image/svg+xml .svg
+
+# Permitir acceso a directorios de assets
+<Directory "app/assets">
+    Require all granted
+</Directory>
+
