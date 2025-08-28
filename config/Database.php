@@ -24,11 +24,11 @@ class Database {
 
     private function __construct() {
         try {
-            // Configuración para servidor de producción (sin socket Unix)
-            $dsn = "mysql:host={$this->host};port={$this->port};dbname={$this->dbname};charset=utf8mb4";
+            // Configuración para MAMP local con socket Unix
+            $dsn = "mysql:unix_socket=/Applications/MAMP/tmp/mysql/mysql.sock;dbname={$this->dbname};charset=utf8mb4";
 
-            // Configuración alternativa para MAMP local (comentada)
-            //$dsn = "mysql:unix_socket=/Applications/MAMP/tmp/mysql/mysql.sock;dbname={$this->dbname};charset=utf8mb4";
+            // Configuración alternativa para servidor de producción (comentada)
+            //$dsn = "mysql:host={$this->host};port={$this->port};dbname={$this->dbname};charset=utf8mb4";
 
             $this->connection = new PDO($dsn, $this->username, $this->password, [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,

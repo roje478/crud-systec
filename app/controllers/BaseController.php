@@ -66,9 +66,16 @@ abstract class BaseController {
         if (strpos($contentType, 'application/json') !== false) {
             $jsonData = file_get_contents('php://input');
             error_log("BaseController::getPostData() - JSON raw data: " . $jsonData);
-            $data = json_decode($jsonData, true);
-            error_log("BaseController::getPostData() - JSON decoded data: " . json_encode($data));
-            return $data ?: [];
+            
+            if (!empty($jsonData)) {
+                $data = json_decode($jsonData, true);
+                error_log("BaseController::getPostData() - JSON decoded data: " . json_encode($data));
+                return $data ?: [];
+            } else {
+                // Si php://input está vacío, intentar con $_POST
+                error_log("BaseController::getPostData() - php://input vacío, usando $_POST");
+                return $_POST ?: [];
+            }
         }
 
         // Si no es JSON, devolver $_POST normal

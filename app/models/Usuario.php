@@ -134,6 +134,9 @@ class Usuario extends BaseModel {
     // Actualizar usuario
     public function update($id, $data) {
         try {
+            error_log("Usuario::update() - Iniciando actualización para ID: $id");
+            error_log("Usuario::update() - Datos recibidos: " . json_encode($data));
+
             // Actualizar datos del usuario
             $updates = [];
             $values = [];
@@ -149,8 +152,8 @@ class Usuario extends BaseModel {
             }
 
             if (isset($data['activo'])) {
-                $updates[] = 'activo = ?';
-                $values[] = $data['activo'] ? 1 : 0;
+                // Para campos bit(1), usar SQL directo en lugar de parámetros
+                $updates[] = 'activo = ' . ($data['activo'] ? '1' : '0');
             }
 
             // Solo actualizar usuario si hay cambios
@@ -162,12 +165,13 @@ class Usuario extends BaseModel {
 
                 $result = $stmt->execute($values);
                 if (!$result) {
-                    error_log("Usuario::update() - Error al actualizar usuario");
+                    error_log("Usuario::update() - Error al actualizar usuario: " . json_encode($stmt->errorInfo()));
                     return false;
                 }
+                error_log("Usuario::update() - Usuario actualizado exitosamente");
             }
 
-            // Actualizar datos del cliente solo si se proporcionan y son diferentes
+            // Actualizar datos del cliente
             if (isset($data['nombres']) || isset($data['apellidos']) || isset($data['direccion']) || isset($data['telefono'])) {
                 $clienteModel = new Cliente();
 
@@ -178,41 +182,47 @@ class Usuario extends BaseModel {
                     $clienteData = [];
                     $hayCambios = false;
 
-                    // Verificar si hay cambios reales
-                    if (isset($data['nombres']) && $data['nombres'] !== $clienteActual['nombres']) {
-                        $clienteData['nombres'] = $data['nombres'];
+                    // Comparación más flexible
+                    if (isset($data['nombres']) && trim($data['nombres']) !== trim($clienteActual['nombres'] ?? '')) {
+                        $clienteData['nombres'] = trim($data['nombres']);
                         $hayCambios = true;
                     }
 
-                    if (isset($data['apellidos']) && $data['apellidos'] !== $clienteActual['apellidos']) {
-                        $clienteData['apellidos'] = $data['apellidos'];
+                    if (isset($data['apellidos']) && trim($data['apellidos']) !== trim($clienteActual['apellidos'] ?? '')) {
+                        $clienteData['apellidos'] = trim($data['apellidos']);
                         $hayCambios = true;
                     }
 
-                    if (isset($data['direccion']) && $data['direccion'] !== $clienteActual['direccion']) {
-                        $clienteData['direccion'] = $data['direccion'];
+                    if (isset($data['direccion']) && trim($data['direccion']) !== trim($clienteActual['direccion'] ?? '')) {
+                        $clienteData['direccion'] = trim($data['direccion']);
                         $hayCambios = true;
                     }
 
-                    if (isset($data['telefono']) && $data['telefono'] !== $clienteActual['telefono']) {
-                        $clienteData['telefono'] = $data['telefono'];
+                    if (isset($data['telefono']) && trim($data['telefono']) !== trim($clienteActual['telefono'] ?? '')) {
+                        $clienteData['telefono'] = trim($data['telefono']);
                         $hayCambios = true;
                     }
 
-                    // Solo actualizar si hay cambios reales
+                    error_log("Usuario::update() - Datos cliente a actualizar: " . json_encode($clienteData));
+
                     if ($hayCambios && !empty($clienteData)) {
                         $clienteActualizado = $clienteModel->update($id, $clienteData);
                         if (!$clienteActualizado) {
                             error_log("Usuario::update() - Error al actualizar cliente");
                             return false;
                         }
+                        error_log("Usuario::update() - Cliente actualizado exitosamente");
+                    } else {
+                        error_log("Usuario::update() - No hay cambios en cliente");
                     }
+                } else {
+                    error_log("Usuario::update() - Cliente no encontrado para ID: $id");
                 }
             }
 
             return true;
         } catch (Exception $e) {
-            error_log("Usuario::update() - Error: " . $e->getMessage());
+            error_log("Usuario::update() - Excepción: " . $e->getMessage());
             return false;
         }
     }
@@ -220,11 +230,38 @@ class Usuario extends BaseModel {
     // Cambiar estado del usuario
     public function changeStatus($id) {
         try {
-            $sql = "UPDATE usuario SET activo = CASE WHEN activo = 1 THEN 0 ELSE 1 END WHERE no_identificacion = ?";
+            error_log("Usuario::changeStatus() - Iniciando cambio de estado para ID: $id");
+            
+            // Obtener estado actual
+            $sqlCurrent = "SELECT activo FROM usuario WHERE no_identificacion = ?";
+            $stmtCurrent = $this->db->prepare($sqlCurrent);
+            $stmtCurrent->execute([$id]);
+            $usuario = $stmtCurrent->fetch();
+            
+            if (!$usuario) {
+                error_log("Usuario::changeStatus() - Usuario no encontrado: $id");
+                return false;
+            }
+            
+            $estadoActual = $usuario['activo'];
+            $nuevoEstado = $estadoActual ? 0 : 1;
+            
+            error_log("Usuario::changeStatus() - Estado actual: " . ($estadoActual ? 'Activo' : 'Inactivo') . ", Nuevo estado: " . ($nuevoEstado ? 'Activo' : 'Inactivo'));
+            
+            // Actualizar estado usando SQL directo para campo bit(1)
+            $sql = "UPDATE usuario SET activo = " . $nuevoEstado . " WHERE no_identificacion = ?";
             $stmt = $this->db->prepare($sql);
-            return $stmt->execute([$id]);
+            $result = $stmt->execute([$id]);
+            
+            if ($result) {
+                error_log("Usuario::changeStatus() - Estado cambiado exitosamente");
+                return true;
+            } else {
+                error_log("Usuario::changeStatus() - Error al cambiar estado: " . json_encode($stmt->errorInfo()));
+                return false;
+            }
         } catch (Exception $e) {
-            error_log("Usuario::changeStatus() - Error: " . $e->getMessage());
+            error_log("Usuario::changeStatus() - Excepción: " . $e->getMessage());
             return false;
         }
     }

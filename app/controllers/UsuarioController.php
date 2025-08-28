@@ -116,126 +116,237 @@ class UsuarioController extends BaseController {
 
     // Actualizar perfil del usuario actual
     public function updateProfile() {
-        // Verificar que el usuario esté autenticado
-        if (!isset($_SESSION['usuario_id'])) {
-            $this->json(['success' => false, 'message' => 'Debes iniciar sesión'], 401);
-        }
-
-        $usuarioId = $_SESSION['usuario_id'];
-        $data = $this->getPostData();
-
-        // Validación básica
-        $required = ['nombres', 'apellidos', 'telefono'];
-        $errors = $this->validateRequired($data, $required);
-
-        if (!empty($errors)) {
-            $this->json(['success' => false, 'errors' => $errors], 400);
-        }
-
-        // Validar contraseña si se proporciona
-        if (!empty($data['contrasenia'])) {
-            if (strlen($data['contrasenia']) < 6) {
-                $this->json(['success' => false, 'message' => 'La contraseña debe tener al menos 6 caracteres'], 400);
+        try {
+            error_log("UsuarioController::updateProfile() - Iniciando actualización de perfil");
+            
+            // Verificar que el usuario esté autenticado
+            if (!isset($_SESSION['usuario_id'])) {
+                error_log("UsuarioController::updateProfile() - Usuario no autenticado");
+                $this->json(['success' => false, 'message' => 'Debes iniciar sesión'], 401);
+                return;
             }
 
-            // Validar confirmación de contraseña
-            if (empty($data['confirmar_contrasenia'])) {
-                $this->json(['success' => false, 'message' => 'Debes confirmar la contraseña'], 400);
+            $usuarioId = $_SESSION['usuario_id'];
+            $data = $this->getPostData();
+            
+            error_log("UsuarioController::updateProfile() - Datos recibidos: " . json_encode($data));
+
+            // Validación básica
+            $required = ['nombres', 'apellidos', 'telefono'];
+            $errors = $this->validateRequired($data, $required);
+
+            if (!empty($errors)) {
+                error_log("UsuarioController::updateProfile() - Errores de validación: " . json_encode($errors));
+                $this->json(['success' => false, 'errors' => $errors], 400);
+                return;
             }
 
-            if ($data['contrasenia'] !== $data['confirmar_contrasenia']) {
-                $this->json(['success' => false, 'message' => 'Las contraseñas no coinciden'], 400);
-            }
-        }
+            // Validar contraseña si se proporciona
+            if (!empty($data['contrasenia'])) {
+                if (strlen($data['contrasenia']) < 6) {
+                    $this->json(['success' => false, 'message' => 'La contraseña debe tener al menos 6 caracteres'], 400);
+                    return;
+                }
 
-        // Preparar datos para el modelo
-        $usuarioData = [
-            'nombres' => $data['nombres'],
-            'apellidos' => $data['apellidos'],
-            'direccion' => $data['direccion'] ?? '',
-            'telefono' => $data['telefono']
-        ];
+                // Validar confirmación de contraseña
+                if (empty($data['confirmar_contrasenia'])) {
+                    $this->json(['success' => false, 'message' => 'Debes confirmar la contraseña'], 400);
+                    return;
+                }
 
-        // Agregar contraseña solo si se proporciona
-        if (!empty($data['contrasenia'])) {
-            $usuarioData['contrasenia'] = $data['contrasenia'];
-        }
-
-        $result = $this->usuarioModel->update($usuarioId, $usuarioData);
-
-        if ($result) {
-            // Actualizar todas las variables de sesión relacionadas con el nombre
-            if (isset($data['nombres']) || isset($data['apellidos'])) {
-                $nombres = $data['nombres'] ?? $_SESSION['usuario_nombres'] ?? '';
-                $apellidos = $data['apellidos'] ?? $_SESSION['usuario_apellidos'] ?? '';
-
-                // Actualizar todas las variables de sesión del nombre
-                $_SESSION['usuario_nombres'] = $nombres;
-                $_SESSION['usuario_apellidos'] = $apellidos;
-                $_SESSION['usuario_nombre_completo'] = trim($nombres . ' ' . $apellidos);
-
-                // Mantener compatibilidad con la variable anterior
-                $_SESSION['usuario_nombre'] = $_SESSION['usuario_nombre_completo'];
+                if ($data['contrasenia'] !== $data['confirmar_contrasenia']) {
+                    $this->json(['success' => false, 'message' => 'Las contraseñas no coinciden'], 400);
+                    return;
+                }
             }
 
-            $this->json(['success' => true, 'message' => 'Perfil actualizado exitosamente']);
-        } else {
-            $this->json(['success' => false, 'message' => 'Error al actualizar el perfil'], 500);
+            // Preparar datos para el modelo
+            $usuarioData = [
+                'nombres' => trim($data['nombres']),
+                'apellidos' => trim($data['apellidos']),
+                'direccion' => trim($data['direccion'] ?? ''),
+                'telefono' => trim($data['telefono'])
+            ];
+
+            // Agregar contraseña solo si se proporciona
+            if (!empty($data['contrasenia'])) {
+                $usuarioData['contrasenia'] = $data['contrasenia'];
+            }
+
+            error_log("UsuarioController::updateProfile() - Datos a enviar al modelo: " . json_encode($usuarioData));
+
+            $result = $this->usuarioModel->update($usuarioId, $usuarioData);
+
+            if ($result) {
+                error_log("UsuarioController::updateProfile() - Actualización exitosa");
+                
+                // Actualizar todas las variables de sesión relacionadas con el nombre
+                if (isset($data['nombres']) || isset($data['apellidos'])) {
+                    $nombres = $data['nombres'] ?? $_SESSION['usuario_nombres'] ?? '';
+                    $apellidos = $data['apellidos'] ?? $_SESSION['usuario_apellidos'] ?? '';
+
+                    // Actualizar todas las variables de sesión del nombre
+                    $_SESSION['usuario_nombres'] = trim($nombres);
+                    $_SESSION['usuario_apellidos'] = trim($apellidos);
+                    $_SESSION['usuario_nombre_completo'] = trim($nombres . ' ' . $apellidos);
+
+                    // Mantener compatibilidad con la variable anterior
+                    $_SESSION['usuario_nombre'] = $_SESSION['usuario_nombre_completo'];
+                }
+
+                $this->json(['success' => true, 'message' => 'Perfil actualizado exitosamente']);
+            } else {
+                error_log("UsuarioController::updateProfile() - Error en actualización");
+                $this->json(['success' => false, 'message' => 'Error al actualizar el perfil'], 500);
+            }
+        } catch (Exception $e) {
+            error_log("UsuarioController::updateProfile() - Excepción: " . $e->getMessage());
+            $this->json(['success' => false, 'message' => 'Error interno del servidor'], 500);
         }
     }
 
     // Actualizar usuario
     public function update($id) {
-        $data = $this->getPostData();
+        try {
+            error_log("UsuarioController::update() - Iniciando actualización para ID: $id");
+            
+            $data = $this->getPostData();
+            error_log("UsuarioController::update() - Datos recibidos: " . json_encode($data));
 
-        // Validación básica
-        $required = ['codigo_perfil', 'nombres', 'apellidos'];
-        $errors = $this->validateRequired($data, $required);
-
-        if (!empty($errors)) {
-            $this->json(['success' => false, 'errors' => $errors], 400);
-        }
-
-        // Validar contraseña si se proporciona
-        if (isset($data['contrasenia']) && !empty($data['contrasenia'])) {
-            if (strlen($data['contrasenia']) < 6) {
-                $this->json(['success' => false, 'message' => 'La contraseña debe tener al menos 6 caracteres'], 400);
+            // Verificar que el usuario existe
+            $usuarioExistente = $this->usuarioModel->getById($id);
+            if (!$usuarioExistente) {
+                error_log("UsuarioController::update() - Usuario no encontrado: $id");
+                $this->json(['success' => false, 'message' => 'Usuario no encontrado'], 404);
+                return;
             }
-        }
 
-        // Preparar datos para el modelo
-        $usuarioData = [
-            'codigo_perfil' => $data['codigo_perfil'],
-            'nombres' => $data['nombres'],
-            'apellidos' => $data['apellidos'],
-            'telefono' => $data['telefono'] ?? '',
-            'direccion' => $data['direccion'] ?? '',
-            'activo' => $data['activo'] ?? 1
-        ];
+            // Validación básica
+            $required = ['codigo_perfil', 'nombres', 'apellidos'];
+            $errors = $this->validateRequired($data, $required);
 
-        // Agregar contraseña solo si se proporciona
-        if (isset($data['contrasenia']) && !empty($data['contrasenia'])) {
-            $usuarioData['contrasenia'] = $data['contrasenia'];
-        }
+            if (!empty($errors)) {
+                error_log("UsuarioController::update() - Errores de validación: " . json_encode($errors));
+                $this->json(['success' => false, 'errors' => $errors], 400);
+                return;
+            }
 
-        $result = $this->usuarioModel->update($id, $usuarioData);
+            // Validar contraseña si se proporciona
+            if (isset($data['contrasenia']) && !empty($data['contrasenia'])) {
+                if (strlen($data['contrasenia']) < 6) {
+                    $this->json(['success' => false, 'message' => 'La contraseña debe tener al menos 6 caracteres'], 400);
+                    return;
+                }
+            }
 
-        if ($result) {
-            $this->json(['success' => true, 'message' => 'Usuario actualizado exitosamente']);
-        } else {
-            $this->json(['success' => false, 'message' => 'Error al actualizar el usuario'], 500);
+            // Preparar datos para el modelo
+            $usuarioData = [
+                'codigo_perfil' => $data['codigo_perfil'],
+                'nombres' => trim($data['nombres']),
+                'apellidos' => trim($data['apellidos']),
+                'telefono' => trim($data['telefono'] ?? ''),
+                'direccion' => trim($data['direccion'] ?? ''),
+                'activo' => $data['activo'] ?? 1
+            ];
+
+            // Agregar contraseña solo si se proporciona
+            if (isset($data['contrasenia']) && !empty($data['contrasenia'])) {
+                $usuarioData['contrasenia'] = $data['contrasenia'];
+            }
+
+            error_log("UsuarioController::update() - Datos a enviar al modelo: " . json_encode($usuarioData));
+
+            $result = $this->usuarioModel->update($id, $usuarioData);
+
+            if ($result) {
+                error_log("UsuarioController::update() - Actualización exitosa");
+                
+                // Actualizar sesión si es el usuario actual
+                if (isset($_SESSION['usuario_id']) && $_SESSION['usuario_id'] == $id) {
+                    $_SESSION['usuario_nombres'] = $usuarioData['nombres'];
+                    $_SESSION['usuario_apellidos'] = $usuarioData['apellidos'];
+                    $_SESSION['usuario_nombre_completo'] = trim($usuarioData['nombres'] . ' ' . $usuarioData['apellidos']);
+                }
+                
+                $this->json(['success' => true, 'message' => 'Usuario actualizado exitosamente']);
+            } else {
+                error_log("UsuarioController::update() - Error en actualización");
+                $this->json(['success' => false, 'message' => 'Error al actualizar el usuario'], 500);
+            }
+        } catch (Exception $e) {
+            error_log("UsuarioController::update() - Excepción: " . $e->getMessage());
+            $this->json(['success' => false, 'message' => 'Error interno del servidor'], 500);
         }
     }
 
     // Cambiar estado de usuario
     public function changeStatus($id) {
-        $result = $this->usuarioModel->changeStatus($id);
+        try {
+            error_log("UsuarioController::changeStatus() - Iniciando cambio de estado para ID: $id");
+            
+            // Verificar que el usuario existe
+            $usuarioExistente = $this->usuarioModel->getById($id);
+            if (!$usuarioExistente) {
+                error_log("UsuarioController::changeStatus() - Usuario no encontrado: $id");
+                if ($this->isAjaxRequest()) {
+                    $this->json(['success' => false, 'message' => 'Usuario no encontrado'], 404);
+                } else {
+                    $this->setFlash('error', 'Usuario no encontrado');
+                    $this->redirect('usuarios');
+                }
+                return;
+            }
+            
+            // Verificar si es el usuario actual (no permitir auto-desactivación)
+            $usuarioActual = $_SESSION['usuario_id'] ?? null;
+            if ($usuarioActual == $id) {
+                error_log("UsuarioController::changeStatus() - Intento de auto-desactivación: $id");
+                if ($this->isAjaxRequest()) {
+                    $this->json([
+                        'success' => false,
+                        'message' => 'No puedes desactivar tu propia cuenta'
+                    ], 400);
+                } else {
+                    $this->setFlash('error', 'No puedes desactivar tu propia cuenta');
+                    $this->redirect('usuarios');
+                }
+                return;
+            }
+            
+            $result = $this->usuarioModel->changeStatus($id);
 
-        if ($result) {
-            $this->json(['success' => true, 'message' => 'Estado del usuario cambiado exitosamente']);
-        } else {
-            $this->json(['success' => false, 'message' => 'Error al cambiar el estado del usuario'], 500);
+            if ($result) {
+                error_log("UsuarioController::changeStatus() - Estado cambiado exitosamente");
+                if ($this->isAjaxRequest()) {
+                    $this->json(['success' => true, 'message' => 'Estado del usuario cambiado exitosamente']);
+                } else {
+                    $this->setFlash('success', 'Estado del usuario cambiado exitosamente');
+                    $this->redirect('usuarios');
+                }
+            } else {
+                error_log("UsuarioController::changeStatus() - Error en cambio de estado");
+                if ($this->isAjaxRequest()) {
+                    $this->json(['success' => false, 'message' => 'Error al cambiar el estado del usuario'], 500);
+                } else {
+                    $this->setFlash('error', 'Error al cambiar el estado del usuario');
+                    $this->redirect('usuarios');
+                }
+            }
+        } catch (Exception $e) {
+            error_log("UsuarioController::changeStatus() - Excepción: " . $e->getMessage());
+            if ($this->isAjaxRequest()) {
+                $this->json(['success' => false, 'message' => 'Error interno del servidor'], 500);
+            } else {
+                $this->setFlash('error', 'Error interno del servidor');
+                $this->redirect('usuarios');
+            }
         }
+    }
+
+    // Verificar si es una petición AJAX
+    private function isAjaxRequest() {
+        return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+               strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
     }
 
 

@@ -35,6 +35,18 @@ $estadisticas = $estadisticas ?? [];
                     </h3>
                 </div>
                 <div class="service-info-card__body">
+                    <!-- Mensajes Flash -->
+                    <?php if (isset($_SESSION['flash_messages'])): ?>
+                        <?php foreach ($_SESSION['flash_messages'] as $type => $message): ?>
+                            <div class="alert alert-<?= $type === 'error' ? 'danger' : $type ?> alert-dismissible fade show" role="alert">
+                                <i class="fas fa-<?= $type === 'error' ? 'exclamation-triangle' : ($type === 'success' ? 'check-circle' : 'info-circle') ?> me-2"></i>
+                                <?= htmlspecialchars($message) ?>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        <?php endforeach; ?>
+                        <?php unset($_SESSION['flash_messages']); ?>
+                    <?php endif; ?>
+                    
                     <div class="table-container">
                         <table class="table table-striped table-hover" id="usuariosTable">
                             <thead class="table-dark">
@@ -86,31 +98,6 @@ $estadisticas = $estadisticas ?? [];
                                                class="btn btn-sm btn-outline-secondary" title="Editar">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-
-                                            <div class="btn-group" role="group">
-                                                <button class="btn btn-sm btn-outline-warning dropdown-toggle"
-                                                        type="button" data-bs-toggle="dropdown" title="Cambiar estado">
-                                                    <i class="fas fa-toggle-on"></i>
-                                                </button>
-                                                <ul class="dropdown-menu">
-                                                    <?php if ($usuario['activo']): ?>
-                                                        <li>
-                                                            <a class="dropdown-item" href="#"
-                                                               onclick="changeStatus(<?= $usuario['no_identificacion'] ?>, 0)">
-                                                                <i class="fas fa-user-times text-danger"></i> Desactivar
-                                                            </a>
-                                                        </li>
-                                                    <?php else: ?>
-                                                        <li>
-                                                            <a class="dropdown-item" href="#"
-                                                               onclick="changeStatus(<?= $usuario['no_identificacion'] ?>, 1)">
-                                                                <i class="fas fa-user-check text-success"></i> Activar
-                                                            </a>
-                                                        </li>
-                                                    <?php endif; ?>
-                                                </ul>
-                                            </div>
-
 
                                         </div>
                                     </td>
@@ -165,28 +152,45 @@ $estadisticas = $estadisticas ?? [];
 // Cambiar estado de usuario
 function changeStatus(id, status) {
     const action = status ? 'activar' : 'desactivar';
+    console.log(`Iniciando cambio de estado para usuario ${id} a ${action}`);
+    
     if (confirm(`¿Está seguro de que desea ${action} este usuario?`)) {
-        fetch('<?= url('usuarios/change-status/') ?>' + id, {
+        const url = '<?= url('usuarios/change-status/') ?>' + id;
+        console.log('URL de la petición:', url);
+        
+        fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
             }
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log('Respuesta del servidor:', response);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
+            console.log('Datos de respuesta:', data);
             if (data.success) {
                 showSuccessMessage(data.message);
+                console.log('Estado cambiado exitosamente, recargando página...');
                 setTimeout(() => {
                     window.location.reload();
                 }, 1500);
             } else {
+                console.error('Error en la respuesta:', data.message);
                 showErrorMessage(data.message || 'Error al cambiar el estado');
             }
         })
         .catch(error => {
-            console.error('Error:', error);
-            showErrorMessage('Error de conexión');
+            console.error('Error en la petición:', error);
+            showErrorMessage('Error de conexión: ' + error.message);
         });
+    } else {
+        console.log('Operación cancelada por el usuario');
     }
 }
 
@@ -236,4 +240,5 @@ function showErrorMessage(message) {
         }
     }, 5000);
 }
+</script>
 </script>
