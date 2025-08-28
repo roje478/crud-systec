@@ -279,4 +279,22 @@ class Cliente extends BaseModel {
         $result = $stmt->fetch();
         return $result['total'] > 0;
     }
+
+    // Buscar clientes para AJAX (versión mejorada)
+    public function buscarClientes($query) {
+        $searchTerm = '%' . $query . '%';
+        
+        $sql = "SELECT * FROM {$this->table} 
+                WHERE no_identificacion LIKE ? 
+                OR nombres LIKE ? 
+                OR apellidos LIKE ? 
+                OR telefono LIKE ? 
+                OR direccion LIKE ?
+                ORDER BY nombres, apellidos
+                LIMIT 50"; // Limitar resultados para mejor rendimiento
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$searchTerm, $searchTerm, $searchTerm, $searchTerm, $searchTerm]);
+        return $stmt->fetchAll();
+    }
 }

@@ -165,6 +165,36 @@ class ClienteController extends BaseController {
         ]);
     }
 
+    // Buscar clientes para AJAX (versión mejorada)
+    public function buscarClientes() {
+        $query = $_GET['q'] ?? '';
+
+        if (empty($query)) {
+            $this->json(['success' => false, 'message' => 'Término de búsqueda requerido'], 400);
+            return;
+        }
+
+        try {
+            $clientes = $this->clienteModel->buscarClientes($query);
+            $this->json([
+                'success' => true,
+                'clientes' => $clientes,
+                'query' => $query
+            ]);
+        } catch (Exception $e) {
+            error_log("Error en buscarClientes: " . $e->getMessage());
+            $this->json(['success' => false, 'message' => 'Error en la búsqueda'], 500);
+        }
+    }
+
+    // Mostrar vista de búsqueda de clientes
+    public function buscar() {
+        // Inicializar array vacío de clientes (se llenará con búsqueda)
+        $clientes = [];
+
+        $this->render('clientes/buscar_mejorada', compact('clientes'));
+    }
+
     // Obtener estadísticas (AJAX)
     public function estadisticas() {
         $estadisticas = $this->clienteModel->getEstadisticas();

@@ -124,8 +124,10 @@ class RouterPrincipal {
                     $controllerInstance->changeStatus($param);
                 } elseif ($action === 'lista-completa') {
                     $controllerInstance->listaCompleta();
-                            } elseif ($action === 'buscar-clientes' && $method === 'GET') {
-                $controllerInstance->buscarClientes();
+                                            } elseif ($action === 'buscar-clientes' && $method === 'GET') {
+                    $controllerInstance->buscarClientes();
+                } elseif ($action === 'buscar') {
+                    $controllerInstance->buscar();
             } elseif ($action === 'buscar-servicios' && $method === 'GET') {
                 $controllerInstance->buscarServicios();
             } else {
@@ -162,7 +164,10 @@ class RouterPrincipal {
                     $controllerInstance->delete($param);
                 } elseif ($action === 'search' && $method === 'GET') {
                     $controllerInstance->search();
-
+                } elseif ($action === 'buscar-clientes' && $method === 'GET') {
+                    $controllerInstance->buscarClientes();
+                } elseif ($action === 'buscar') {
+                    $controllerInstance->buscar();
                 } else {
                     $this->handle404("Acción '$action' no encontrada");
                 }
