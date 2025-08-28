@@ -31,30 +31,26 @@ $breadcrumb = [
                     </div>
 
                     <div class="service-info-grid mb-3">
-                        <div class="service-info__field">
+                        <div class="service-info__field service-info__field--full-width">
+                            <label class="service-info__label" for="clienteSearch">
+                                Buscar Cliente <span class="form__required">*</span>
+                            </label>
                             <div class="service-info__input">
-                                <i class="fas fa-user service-info__icon"></i>
-                                <select class="form__control" id="cliente_existente" name="cliente_existente">
-                                    <option value="">Seleccionar cliente</option>
-                                    <?php if (!empty($clientes)): ?>
-                                        <?php foreach ($clientes as $cliente): ?>
-                                            <option value="<?= htmlspecialchars($cliente['NoIdentificacionCliente']) ?>">
-                                                <?= htmlspecialchars($cliente['NombreCliente']) ?>
-                                                (<?= htmlspecialchars($cliente['NoIdentificacionCliente']) ?>)
-                                            </option>
-                                        <?php endforeach; ?>
-                                    <?php else: ?>
-                                        <option value="" disabled>No hay clientes disponibles</option>
-                                    <?php endif; ?>
-                                </select>
+                                <i class="fas fa-search service-info__icon"></i>
+                                <input type="text"
+                                    class="form__control"
+                                    id="clienteSearch"
+                                    placeholder="Escriba nombre, apellido o identificación del cliente..."
+                                    autocomplete="off">
+                                <input type="hidden" id="cliente_existente" name="cliente_existente">
                             </div>
                         </div>
 
-                            <button type="button" class="btn btn--primary" id="btnSeleccionarCliente" disabled>
-                                <i class="fas fa-arrow-right btn__icon"></i>
-                                Continuar con Cliente Seleccionado
-                            </button>
+                    </div>
 
+                    <!-- Contenedor para resultados de búsqueda -->
+                    <div id="clienteSearchContainer" class="cliente-search-container" style="display: none;">
+                        <!-- Los resultados se cargarán dinámicamente aquí -->
                     </div>
 
                     <!-- Información del Cliente Seleccionado -->
@@ -216,6 +212,11 @@ $breadcrumb = [
 
 <script>
     $(document).ready(function() {
+        // Variables para la búsqueda de clientes
+        let searchTimeout;
+        let selectedIndex = -1;
+        let searchResults = [];
+
         // Función para verificar si hay un cliente seleccionado
         function checkClienteSeleccionado() {
             const clienteSeleccionado = $('#cliente_existente').val();
@@ -230,27 +231,220 @@ $breadcrumb = [
             }
         }
 
-        // Detectar cambios en la selección de cliente existente
-        $('#cliente_existente').on('change', function() {
-            const clienteSeleccionado = checkClienteSeleccionado();
+        // Búsqueda de clientes con autocompletado optimizada
+        $('#clienteSearch').on('input', function() {
+            const query = $(this).val().trim();
 
-            if (clienteSeleccionado) {
-                const clienteId = $(this).val();
-                const clienteNombre = $(this).find('option:selected').text();
+            // Limpiar timeout anterior
+            clearTimeout(searchTimeout);
 
-                // Mostrar información básica
-                $('#cliente-nombre').text(clienteNombre);
-                $('#cliente-identificacion').text(clienteId);
-                $('#cliente-telefono').text('Consultando...');
-                $('#cliente-direccion').text('Consultando...');
-
-                // Mostrar la información
-                $('#cliente-info').show();
-
-                // Aquí podrías hacer una llamada AJAX para obtener más detalles del cliente
-                // Por ahora mostramos información básica
-            } else {
+            // Ocultar resultados si la búsqueda está vacía
+            if (query.length < 1) {
+                $('#clienteSearchContainer').hide();
+                $('#cliente_existente').val('');
+                checkClienteSeleccionado();
                 $('#cliente-info').hide();
+                return;
+            }
+
+            // Mostrar loading
+            $('#clienteSearchContainer').html('<div class="cliente-search-loading">Buscando clientes...</div>').show();
+
+            // Hacer búsqueda después de 200ms de inactividad (más rápido)
+            searchTimeout = setTimeout(function() {
+                buscarClientes(query);
+            }, 200);
+        });
+
+        // Función para buscar clientes
+        function buscarClientes(query) {
+            console.log('Buscando clientes con query:', query);
+
+            $.ajax({
+                url: 'index.php?route=servicios/buscar-clientes',
+                method: 'GET',
+                data: {
+                    q: query
+                },
+                dataType: 'json',
+                success: function(data) {
+                    console.log('Respuesta de búsqueda:', data);
+                    if (data.success) {
+                        mostrarResultadosBusqueda(data.clientes);
+                    } else {
+                        mostrarErrorBusqueda('Error en la búsqueda');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error en búsqueda AJAX:', error);
+                    console.error('Status:', status);
+                    console.error('Response:', xhr.responseText);
+                    mostrarErrorBusqueda('Error de conexión');
+                }
+            });
+        }
+
+        // Función para mostrar resultados de búsqueda optimizada
+        function mostrarResultadosBusqueda(clientes) {
+            console.log('Mostrando resultados:', clientes);
+            searchResults = clientes;
+            const resultsContainer = $('#clienteSearchContainer');
+
+            if (clientes.length === 0) {
+                resultsContainer.html('<div class="cliente-search-no-results">No se encontraron clientes</div>');
+            } else {
+                let html = '<div class="cliente-search-header">Resultados de búsqueda (haga clic en cualquier resultado para seleccionar):</div>';
+                if (clientes.length === 1) {
+                    html += '<div class="cliente-search-single-result">Se encontró un cliente. Haga clic para seleccionarlo.</div>';
+                }
+
+                clientes.forEach((cliente, index) => {
+                    html += `
+                        <div class="cliente-search-result-item" data-index="${index}">
+                            <div class="cliente-info">
+                                <div class="cliente-nombre">${cliente.NombreCliente}</div>
+                                <div class="cliente-detalles">
+                                    <span class="cliente-identificacion">ID: ${cliente.NoIdentificacionCliente}</span>
+                                    ${cliente.telefono ? `<span class="cliente-telefono">Tel: ${cliente.telefono}</span>` : ''}
+                                </div>
+                            </div>
+                            <div class="cliente-action">
+                                <button type="button" class="btn btn--sm btn--primary seleccionar-cliente" data-index="${index}">
+                                    <i class="fas fa-check"></i> Seleccionar
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                resultsContainer.html(html);
+            }
+            resultsContainer.show();
+        }
+
+        // Función para mostrar error en búsqueda
+        function mostrarErrorBusqueda(mensaje) {
+            $('#clienteSearchContainer').html(`<div class="cliente-search-no-results">${mensaje}</div>`).show();
+        }
+
+        // Manejar clic en resultado de búsqueda
+        $(document).on('click', '.cliente-search-result-item', function() {
+            const index = $(this).data('index');
+            const cliente = searchResults[index];
+
+            if (cliente) {
+                seleccionarCliente(cliente);
+            }
+        });
+
+        // Manejar clic en botón de seleccionar
+        $(document).on('click', '.seleccionar-cliente', function(e) {
+            e.stopPropagation(); // Evitar que se active el clic del item
+            const index = $(this).data('index');
+            const cliente = searchResults[index];
+
+            if (cliente) {
+                seleccionarCliente(cliente);
+            }
+        });
+
+        // Función para seleccionar cliente optimizada con redirección directa
+        function seleccionarCliente(cliente) {
+            console.log('Seleccionando cliente:', cliente);
+
+            // Mostrar mensaje de confirmación rápida
+            mostrarMensajeExito('Cliente seleccionado: ' + cliente.NombreCliente + '. Redirigiendo...');
+
+            // Redirección directa a crear servicio
+            setTimeout(function() {
+                window.location.href = 'index.php?route=servicios/create&cliente_id=' + cliente.NoIdentificacionCliente;
+            }, 500);
+        }
+
+        // Función para mostrar información del cliente
+        function mostrarInformacionCliente(cliente) {
+            $('#cliente-nombre').text(cliente.NombreCliente);
+            $('#cliente-identificacion').text(cliente.NoIdentificacionCliente);
+            $('#cliente-telefono').text(cliente.telefono || 'No disponible');
+            $('#cliente-direccion').text(cliente.direccion || 'No disponible');
+            $('#cliente-info').show();
+        }
+
+        // Función para mostrar mensaje de éxito
+        function mostrarMensajeExito(mensaje) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed';
+            alertDiv.style.top = '20px';
+            alertDiv.style.right = '20px';
+            alertDiv.style.zIndex = '9999';
+            alertDiv.style.minWidth = '300px';
+            alertDiv.innerHTML = `
+                <i class="fas fa-check-circle me-2"></i>
+                ${mensaje}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+
+            document.body.appendChild(alertDiv);
+
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 3000);
+        }
+
+        // Manejar navegación con teclado optimizada
+        $('#clienteSearch').on('keydown', function(e) {
+            const resultsContainer = $('#clienteSearchContainer');
+            const items = resultsContainer.find('.cliente-search-result-item');
+
+            if (items.length === 0) return;
+
+            switch (e.key) {
+                case 'ArrowDown':
+                    e.preventDefault();
+                    selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
+                    actualizarSeleccion(items);
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    selectedIndex = Math.max(selectedIndex - 1, -1);
+                    actualizarSeleccion(items);
+                    break;
+                case 'Enter':
+                    e.preventDefault();
+                    if (selectedIndex >= 0 && searchResults[selectedIndex]) {
+                        const cliente = searchResults[selectedIndex];
+                        seleccionarCliente(cliente);
+                    }
+                    break;
+                case 'Escape':
+                    resultsContainer.hide();
+                    selectedIndex = -1;
+                    break;
+                case 'Tab':
+                    // Si hay resultados y se presiona Tab, seleccionar el primero
+                    if (searchResults.length > 0 && selectedIndex === -1) {
+                        e.preventDefault();
+                        selectedIndex = 0;
+                        actualizarSeleccion(items);
+                    }
+                    break;
+            }
+        });
+
+        // Función para actualizar selección visual
+        function actualizarSeleccion(items) {
+            items.removeClass('selected');
+            if (selectedIndex >= 0) {
+                items.eq(selectedIndex).addClass('selected');
+            }
+        }
+
+        // Ocultar resultados al hacer clic fuera
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('#clienteSearch, #clienteSearchContainer').length) {
+                $('#clienteSearchContainer').hide();
+                selectedIndex = -1;
             }
         });
 

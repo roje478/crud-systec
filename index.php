@@ -94,6 +94,12 @@ class RouterPrincipal {
                     $controllerInstance->index();
                 } elseif ($action === 'select-cliente') {
                     $controllerInstance->selectCliente();
+                } elseif ($action === 'buscar') {
+                    $controllerInstance->buscar();
+                } elseif ($action === 'buscar-simple') {
+                    $controllerInstance->buscarSimple();
+                } elseif ($action === 'buscar-mejorada') {
+                    $controllerInstance->buscarMejorada();
                 } elseif ($action === 'create') {
                     $controllerInstance->create();
                 } elseif ($action === 'store' && $method === 'POST') {
@@ -118,7 +124,11 @@ class RouterPrincipal {
                     $controllerInstance->changeStatus($param);
                 } elseif ($action === 'lista-completa') {
                     $controllerInstance->listaCompleta();
-                } else {
+                            } elseif ($action === 'buscar-clientes' && $method === 'GET') {
+                $controllerInstance->buscarClientes();
+            } elseif ($action === 'buscar-servicios' && $method === 'GET') {
+                $controllerInstance->buscarServicios();
+            } else {
                     $this->handle404("Acción '$action' no encontrada");
                 }
             }

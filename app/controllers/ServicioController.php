@@ -64,6 +64,64 @@ class ServicioController extends BaseController {
         $this->render('servicios/select_cliente', compact('clientes'));
     }
 
+    // Mostrar vista de búsqueda de servicios (versión mejorada)
+    public function buscar() {
+        // Verificar si el usuario es técnico
+        $esTecnico = isset($_SESSION['usuario_perfil_nombre']) &&
+                   strtolower($_SESSION['usuario_perfil_nombre']) === 'tecnico';
+
+        // Verificar si el usuario es asesor
+        $esAsesor = isset($_SESSION['usuario_perfil_nombre']) &&
+                   strtolower($_SESSION['usuario_perfil_nombre']) === 'asesor';
+
+        // Obtener estados disponibles para los dropdowns
+        $estados = $this->servicioModel->getEstados();
+
+        // Inicializar array vacío de servicios (se llenará con búsqueda)
+        $servicios = [];
+
+        // Usar la vista mejorada en lugar de la original
+        $this->render('servicios/buscar_mejorada', compact('servicios', 'estados', 'esTecnico', 'esAsesor'));
+    }
+
+    // Mostrar vista de búsqueda simplificada para diagnóstico
+    public function buscarSimple() {
+        // Verificar si el usuario es técnico
+        $esTecnico = isset($_SESSION['usuario_perfil_nombre']) &&
+                   strtolower($_SESSION['usuario_perfil_nombre']) === 'tecnico';
+
+        // Verificar si el usuario es asesor
+        $esAsesor = isset($_SESSION['usuario_perfil_nombre']) &&
+                   strtolower($_SESSION['usuario_perfil_nombre']) === 'asesor';
+
+        // Obtener estados disponibles para los dropdowns
+        $estados = $this->servicioModel->getEstados();
+
+        // Inicializar array vacío de servicios (se llenará con búsqueda)
+        $servicios = [];
+
+        $this->render('servicios/buscar_simple', compact('servicios', 'estados', 'esTecnico', 'esAsesor'));
+    }
+
+    // Mostrar vista de búsqueda mejorada (versión final)
+    public function buscarMejorada() {
+        // Verificar si el usuario es técnico
+        $esTecnico = isset($_SESSION['usuario_perfil_nombre']) &&
+                   strtolower($_SESSION['usuario_perfil_nombre']) === 'tecnico';
+
+        // Verificar si el usuario es asesor
+        $esAsesor = isset($_SESSION['usuario_perfil_nombre']) &&
+                   strtolower($_SESSION['usuario_perfil_nombre']) === 'asesor';
+
+        // Obtener estados disponibles para los dropdowns
+        $estados = $this->servicioModel->getEstados();
+
+        // Inicializar array vacío de servicios (se llenará con búsqueda)
+        $servicios = [];
+
+        $this->render('servicios/buscar_mejorada', compact('servicios', 'estados', 'esTecnico', 'esAsesor'));
+    }
+
     // Mostrar formulario de creación
     public function create() {
         // Verificar si se pasó un cliente_id por URL
@@ -274,6 +332,32 @@ class ServicioController extends BaseController {
         } catch (Exception $e) {
             $this->json(['success' => false, 'message' => 'Error interno del servidor'], 500);
         }
+    }
+
+    /**
+     * Buscar clientes para autocompletado
+     */
+    public function buscarClientes() {
+        $query = $_GET['q'] ?? '';
+        
+        if (strlen($query) < 2) {
+            $this->json(['success' => true, 'clientes' => []]);
+            return;
+        }
+
+        $clientes = $this->servicioModel->buscarClientes($query);
+        $this->json(['success' => true, 'clientes' => $clientes]);
+    }
+
+    // Buscar servicios para autocompletado
+    public function buscarServicios() {
+        $query = $_GET['q'] ?? '';
+        if (strlen($query) < 1) {
+            $this->json(['success' => true, 'servicios' => []]);
+            return;
+        }
+        $servicios = $this->servicioModel->buscarServicios($query);
+        $this->json(['success' => true, 'servicios' => $servicios]);
     }
 
     /**

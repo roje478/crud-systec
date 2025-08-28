@@ -7,7 +7,9 @@
 define('PUBLIC_ROUTES', [
     'auth/login',
     'auth/authenticate',
-    'auth/logout'
+    'auth/logout',
+    'servicios/buscar-servicios',
+    'servicios/buscar-clientes'
 ]);
 
 // Rutas que requieren autenticación pero no permisos específicos

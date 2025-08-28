@@ -346,4 +346,60 @@ class Servicio extends BaseModel {
         $stmt->execute([$id]);
         return $stmt->fetch();
     }
+
+    // Buscar clientes para autocompletado
+    public function buscarClientes($query) {
+        $sql = "SELECT
+                    no_identificacion as NoIdentificacionCliente,
+                    CONCAT(nombres, ' ', apellidos) as NombreCliente,
+                    nombres,
+                    apellidos,
+                    telefono,
+                    direccion,
+                    tipo_id
+                FROM cliente
+                WHERE (
+                    nombres LIKE ? OR
+                    apellidos LIKE ? OR
+                    CONCAT(nombres, ' ', apellidos) LIKE ? OR
+                    no_identificacion LIKE ?
+                )
+                ORDER BY nombres, apellidos
+                LIMIT 10";
+
+        $searchTerm = "%{$query}%";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$searchTerm, $searchTerm, $searchTerm, $searchTerm]);
+        return $stmt->fetchAll();
+    }
+
+    // Buscar servicios para autocompletado
+    public function buscarServicios($query) {
+        $sql = "SELECT
+                    s.*,
+                    CONCAT(c.nombres, ' ', c.apellidos) as cliente_nombre,
+                    c.no_identificacion as cliente_identificacion,
+                    c.telefono as cliente_telefono,
+                    et.Descripcion as estado_descripcion,
+                    CONCAT(t.nombres, ' ', t.apellidos) as tecnico_nombre,
+                    ts.Descripcion as tipo_servicio_descripcion
+                FROM servicio s
+                LEFT JOIN cliente c ON s.NoIdentificacionCliente = c.no_identificacion
+                LEFT JOIN estadoentaller et ON s.IdEstadoEnTaller = et.IdEstadoEnTaller
+                LEFT JOIN cliente t ON s.NoIdentificacionEmpleado = t.no_identificacion
+                LEFT JOIN tiposervicio ts ON s.IdTipoServicio = ts.IdTipoServicio
+                WHERE (
+                    s.equipo LIKE ? OR
+                    s.problema LIKE ? OR
+                    CONCAT(c.nombres, ' ', c.apellidos) LIKE ? OR
+                    c.no_identificacion LIKE ? OR
+                    s.IdServicio LIKE ?
+                )
+                ORDER BY s.IdServicio DESC
+                LIMIT 10";
+        $searchTerm = "%{$query}%";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$searchTerm, $searchTerm, $searchTerm, $searchTerm, $searchTerm]);
+        return $stmt->fetchAll();
+    }
 }

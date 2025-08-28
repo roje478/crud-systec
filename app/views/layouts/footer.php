@@ -59,6 +59,11 @@
                 if (breadcrumbMain) {
                     breadcrumbMain.textContent = 'Dashboard / Lista de Servicios / Detalle del Servicio';
                 }
+            } else if (currentPath.includes('route=servicios/buscar')) {
+                if (pageTitleMain) pageTitleMain.textContent = 'Buscar Servicios';
+                if (breadcrumbMain) {
+                    breadcrumbMain.textContent = 'Dashboard / Lista de Servicios / Buscar Servicios';
+                }
             } else if (currentPath.includes('route=servicios')) {
                 if (pageTitleMain) pageTitleMain.textContent = 'Lista de Servicios';
                 if (breadcrumbMain) {

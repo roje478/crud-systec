@@ -40,28 +40,27 @@ if (isset($_SESSION['flash_message'])) {
                         </div>
                     </div>
                     <form id="createServiceForm" class="service-info-grid">
-                        <!-- Cliente Seleccionado (oculto si hay cliente pre-seleccionado) -->
+                        <!-- Búsqueda de Cliente -->
                         <?php if (!isset($clienteSeleccionado)): ?>
                             <div class="service-info__field">
-                                <label class="service-info__label" for="idcliente">
-                                    Cliente <span class="form__required">*</span>
+                                <label class="service-info__label" for="clienteSearch">
+                                    Buscar Cliente <span class="form__required">*</span>
                                 </label>
                                 <div class="service-info__input">
-                                    <i class="fas fa-user service-info__icon"></i>
-                                    <select class="form__control" id="idcliente" name="idcliente" required>
-                                        <option value="">Seleccionar cliente</option>
-                                        <?php if (!empty($clientes)): ?>
-                                            <?php foreach ($clientes as $cliente): ?>
-                                                <option value="<?= htmlspecialchars($cliente['NoIdentificacionCliente']) ?>">
-                                                    <?= htmlspecialchars($cliente['NombreCliente']) ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        <?php else: ?>
-                                            <option value="" disabled>No hay clientes disponibles</option>
-                                        <?php endif; ?>
-                                    </select>
+                                    <i class="fas fa-search service-info__icon"></i>
+                                    <input type="text" 
+                                           class="form__control" 
+                                           id="clienteSearch" 
+                                           placeholder="Escriba nombre, apellido o identificación del cliente..."
+                                           autocomplete="off">
+                                    <input type="hidden" id="idcliente" name="idcliente" required>
                                 </div>
                                 <div class="form__feedback form__feedback--invalid" id="error-idcliente"></div>
+                                
+                                <!-- Dropdown de resultados de búsqueda -->
+                                <div id="clienteSearchResults" class="cliente-search-results" style="display: none;">
+                                    <!-- Los resultados se cargarán dinámicamente aquí -->
+                                </div>
                             </div>
                         <?php endif; ?>
 
@@ -301,6 +300,8 @@ if (isset($_SESSION['flash_message'])) {
                 $('input, select, textarea').each(function() {
                     originalFormData[this.name] = $(this).val();
                 });
+                // También capturar el campo de búsqueda de cliente
+                originalFormData['clienteSearch'] = $('#clienteSearch').val();
             }
 
             // Verificar si el formulario está completo y ha cambiado
@@ -389,30 +390,195 @@ if (isset($_SESSION['flash_message'])) {
                             return false; // break the loop
                         }
                     });
+                    
+                    // Verificar también el campo de búsqueda de cliente
+                    const currentSearchValue = $('#clienteSearch').val();
+                    const originalSearchValue = originalFormData['clienteSearch'] || '';
+                    if (currentSearchValue !== originalSearchValue) {
+                        allOriginal = false;
+                    }
+                    
                     formChanged = !allOriginal;
                 }
 
                 checkFormChanges();
             });
 
-            // Actualizar información del cliente cuando se selecciona
-            $('#idcliente').on('change', function() {
-                const clienteId = $(this).val();
-                if (clienteId) {
-                    // Buscar el cliente seleccionado en la lista
-                    const clienteSeleccionado = <?= json_encode($clientes) ?>.find(c =>
-                        c.NoIdentificacionCliente.toString() === clienteId ||
-                        c.NoIdentificacionCliente == clienteId
-                    );
-                    if (clienteSeleccionado) {
-                        // Agregar el número de identificación al campo ID Cliente
-                        $('#idcliente_display').val(clienteSeleccionado.NoIdentificacionCliente);
-                        // Nota: El campo técnico ahora es un dropdown independiente
-                    }
+            // Detectar cambios en el campo de búsqueda de cliente
+            $('#clienteSearch').on('input', function() {
+                const currentValue = $(this).val();
+                const originalValue = originalFormData['clienteSearch'] || '';
+                
+                if (currentValue !== originalValue) {
+                    formChanged = true;
                 } else {
-                    // Limpiar campos si no hay cliente seleccionado
-                    $('#idcliente_display').val('');
-                    // El campo técnico mantiene su valor seleccionado
+                    // Verificar si todos los campos han vuelto a su estado original
+                    let allOriginal = true;
+                    $('input, select, textarea').each(function() {
+                        const current = $(this).val();
+                        const original = originalFormData[this.name] || '';
+                        if (current !== original) {
+                            allOriginal = false;
+                            return false; // break the loop
+                        }
+                    });
+                    
+                    if (currentValue !== originalValue) {
+                        allOriginal = false;
+                    }
+                    
+                    formChanged = !allOriginal;
+                }
+
+                checkFormChanges();
+            });
+
+            // Funcionalidad de búsqueda de clientes
+            let searchTimeout;
+            let selectedIndex = -1;
+            let searchResults = [];
+
+            // Búsqueda de clientes con autocompletado
+            $('#clienteSearch').on('input', function() {
+                const query = $(this).val().trim();
+                
+                // Limpiar timeout anterior
+                clearTimeout(searchTimeout);
+                
+                // Ocultar resultados si la búsqueda está vacía
+                if (query.length < 2) {
+                    $('#clienteSearchResults').hide();
+                    $('#idcliente').val('');
+                    checkFormChanges();
+                    return;
+                }
+
+                // Mostrar loading
+                $('#clienteSearchResults').html('<div class="cliente-search-loading">Buscando clientes...</div>').show();
+
+                // Hacer búsqueda después de 300ms de inactividad
+                searchTimeout = setTimeout(function() {
+                    buscarClientes(query);
+                }, 300);
+            });
+
+            // Función para buscar clientes
+            function buscarClientes(query) {
+                fetch(`<?= url('servicios/buscar-clientes') ?>?q=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            mostrarResultadosBusqueda(data.clientes);
+                        } else {
+                            mostrarErrorBusqueda('Error en la búsqueda');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        mostrarErrorBusqueda('Error de conexión');
+                    });
+            }
+
+            // Función para mostrar resultados de búsqueda
+            function mostrarResultadosBusqueda(clientes) {
+                searchResults = clientes;
+                const resultsContainer = $('#clienteSearchResults');
+                
+                if (clientes.length === 0) {
+                    resultsContainer.html('<div class="cliente-search-no-results">No se encontraron clientes</div>');
+                } else {
+                    let html = '';
+                    clientes.forEach((cliente, index) => {
+                        html += `
+                            <div class="cliente-search-result-item" data-index="${index}">
+                                <div class="cliente-info">
+                                    <div class="cliente-nombre">${cliente.NombreCliente}</div>
+                                    <div class="cliente-detalles">
+                                        <span class="cliente-identificacion">ID: ${cliente.NoIdentificacionCliente}</span>
+                                        ${cliente.telefono ? `<span class="cliente-telefono">Tel: ${cliente.telefono}</span>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    resultsContainer.html(html);
+                }
+                resultsContainer.show();
+            }
+
+            // Función para mostrar error en búsqueda
+            function mostrarErrorBusqueda(mensaje) {
+                $('#clienteSearchResults').html(`<div class="cliente-search-no-results">${mensaje}</div>`).show();
+            }
+
+            // Manejar clic en resultado de búsqueda
+            $(document).on('click', '.cliente-search-result-item', function() {
+                const index = $(this).data('index');
+                const cliente = searchResults[index];
+                
+                if (cliente) {
+                    // Llenar el campo de búsqueda con el nombre del cliente
+                    $('#clienteSearch').val(cliente.NombreCliente);
+                    
+                    // Guardar el ID del cliente en el campo oculto
+                    $('#idcliente').val(cliente.NoIdentificacionCliente);
+                    
+                    // Ocultar resultados
+                    $('#clienteSearchResults').hide();
+                    
+                    // Verificar cambios en el formulario
+                    checkFormChanges();
+                }
+            });
+
+            // Manejar navegación con teclado
+            $('#clienteSearch').on('keydown', function(e) {
+                const resultsContainer = $('#clienteSearchResults');
+                const items = resultsContainer.find('.cliente-search-result-item');
+                
+                if (items.length === 0) return;
+
+                switch(e.key) {
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
+                        actualizarSeleccion(items);
+                        break;
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        selectedIndex = Math.max(selectedIndex - 1, -1);
+                        actualizarSeleccion(items);
+                        break;
+                    case 'Enter':
+                        e.preventDefault();
+                        if (selectedIndex >= 0 && searchResults[selectedIndex]) {
+                            const cliente = searchResults[selectedIndex];
+                            $('#clienteSearch').val(cliente.NombreCliente);
+                            $('#idcliente').val(cliente.NoIdentificacionCliente);
+                            resultsContainer.hide();
+                            checkFormChanges();
+                        }
+                        break;
+                    case 'Escape':
+                        resultsContainer.hide();
+                        selectedIndex = -1;
+                        break;
+                }
+            });
+
+            // Función para actualizar selección visual
+            function actualizarSeleccion(items) {
+                items.removeClass('selected');
+                if (selectedIndex >= 0) {
+                    items.eq(selectedIndex).addClass('selected');
+                }
+            }
+
+            // Ocultar resultados al hacer clic fuera
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('#clienteSearch, #clienteSearchResults').length) {
+                    $('#clienteSearchResults').hide();
+                    selectedIndex = -1;
                 }
             });
 
@@ -424,12 +590,19 @@ if (isset($_SESSION['flash_message'])) {
                         const originalValue = originalFormData[this.name] || '';
                         $(this).val(originalValue);
                     });
+                    
+                    // Restaurar campo de búsqueda de cliente
+                    $('#clienteSearch').val(originalFormData['clienteSearch'] || '');
+                    
                     formChanged = false;
                     checkFormChanges();
 
                     // Limpiar errores
                     $('.form__feedback--invalid').text('');
                     $('.form__control--invalid').removeClass('form__control--invalid');
+                    
+                    // Ocultar resultados de búsqueda
+                    $('#clienteSearchResults').hide();
                 }
             });
 
