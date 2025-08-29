@@ -22,7 +22,7 @@
     <!-- Sidebar -->
     <div class="sidebar">
         <div class="sidebar__header">
-            <a href="https://www.systecsoluciones.com.co/app/index.php?route=clientes" class="sidebar__brand">
+            <a href="https://www.systecsoluciones.com.co/app/index.php?route=servicios/buscar" class="sidebar__brand">
                 <?php
                 // Incluir EmpresaHelper si no está cargado
                 if (!class_exists('EmpresaHelper')) {

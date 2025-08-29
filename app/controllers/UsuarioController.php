@@ -108,7 +108,7 @@ class UsuarioController extends BaseController {
 
         if (!$usuario) {
             $this->setFlash('error', 'Usuario no encontrado');
-            $this->redirect(BASE_URL . '?route=servicios');
+            $this->redirect(BASE_URL . '?route=servicios/buscar');
         }
 
         $this->render('usuarios/profile', compact('usuario'));

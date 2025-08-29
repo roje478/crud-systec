@@ -13,7 +13,7 @@ class AuthController extends BaseController {
     public function login() {
         // Si ya está logueado, redirigir al dashboard
         if (isset($_SESSION['usuario_id']) && isset($_SESSION['usuario_activo']) && $_SESSION['usuario_activo'] === true) {
-            $this->redirect('servicios');
+            $this->redirect('servicios/buscar');
         }
 
         // Renderizar vista de login sin header/footer
@@ -81,7 +81,7 @@ class AuthController extends BaseController {
         $_SESSION['usuario_activo'] = true;
 
         $this->setFlash('success', '¡Bienvenido al sistema!');
-        $this->redirect('servicios');
+        $this->redirect('servicios/buscar');
     }
 
     // Cerrar sesión
