@@ -112,21 +112,15 @@ $breadcrumb = [
 
                 <div class="service-info-card__body">
                     <div class="form-intro">
-                        <div class="form-intro__wrapper">
-                            <div class="form-intro__icon">
-                                <i class="fas fa-user-plus"></i>
+                                                    <div class="form-intro__wrapper">
+                                <div class="form-intro__icon">
+                                    <i class="fas fa-user-plus"></i>
+                                </div>
+                                <div class="form-intro__content">
+                                    <h3 class="form-intro__title">Nuevo Cliente</h3>
+                                    <p class="form-intro__description">Complete la información para crear un nuevo cliente</p>
+                                </div>
                             </div>
-                            <div class="form-intro__content">
-                                <h3 class="form-intro__title">Nuevo Cliente</h3>
-                                <p class="form-intro__description">Complete la información para crear un nuevo cliente</p>
-                            </div>
-                            <div class="form__actions mt-0 pt-0">
-                                <button type="submit" class="btn btn--primary">
-                                    <i class="fas fa-save btn__icon"></i>
-                                    Crear Cliente y Continuar
-                                </button>
-                            </div>
-                        </div>
                     </div>
 
                     <form id="createClienteForm" class="service-info-grid">
@@ -200,6 +194,15 @@ $breadcrumb = [
                             </div>
                         </div>
 
+                        <!-- Botón para crear cliente -->
+                        <div class="service-info__field service-info__field--full-width">
+                            <div class="form__actions">
+                                <button type="submit" class="btn btn--primary">
+                                    <i class="fas fa-save btn__icon"></i>
+                                    Crear Cliente y Continuar
+                                </button>
+                            </div>
+                        </div>
 
                     </form>
                 </div>
@@ -485,37 +488,92 @@ $breadcrumb = [
                 method: 'POST',
                 data: formData,
                 success: function(response) {
-                    try {
-                        const result = JSON.parse(response);
-                        if (result.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Cliente Creado',
-                                text: 'El cliente se ha creado exitosamente'
-                            }).then(() => {
-                                // Redirigir a crear servicio con el nuevo cliente
-                                window.location.href = 'index.php?route=servicios/create&cliente_id=' + formData.no_identificacion;
-                            });
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: result.message || 'Error al crear el cliente'
-                            });
+                    console.log('Respuesta del servidor:', response);
+                    console.log('Tipo de respuesta:', typeof response);
+                    
+                    // Si la respuesta ya es un objeto, usarla directamente
+                    let result;
+                    if (typeof response === 'object') {
+                        result = response;
+                    } else {
+                        // Intentar parsear JSON
+                        try {
+                            result = JSON.parse(response);
+                        } catch (e) {
+                            console.log('Error al parsear JSON:', e);
+                            console.log('Respuesta cruda del servidor:', response);
+                            
+                            // Intentar extraer JSON si hay HTML antes
+                            const jsonMatch = response.match(/\{.*\}/s);
+                            if (jsonMatch) {
+                                try {
+                                    result = JSON.parse(jsonMatch[0]);
+                                    console.log('JSON extraído exitosamente:', result);
+                                } catch (e2) {
+                                    console.log('Error al parsear JSON extraído:', e2);
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: 'Error al procesar la respuesta del servidor'
+                                    });
+                                    return;
+                                }
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'Error al procesar la respuesta del servidor'
+                                });
+                                return;
+                            }
                         }
-                    } catch (e) {
+                    }
+                    
+                    if (result.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Cliente Creado',
+                            text: 'El cliente se ha creado exitosamente'
+                        }).then(() => {
+                            // Redirigir a crear servicio con el nuevo cliente
+                            // Usar no_identificacion en lugar de id para mantener consistencia
+                            window.location.href = 'index.php?route=servicios/create&cliente_id=' + formData.no_identificacion;
+                        });
+                    } else {
+                        let errorMessage = result.message || 'Error al crear el cliente';
+                        
+                        // Mostrar errores específicos si existen
+                        if (result.errors && Object.keys(result.errors).length > 0) {
+                            errorMessage += '\n\nErrores específicos:\n';
+                            for (let field in result.errors) {
+                                errorMessage += `• ${result.errors[field]}\n`;
+                            }
+                        }
+                        
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
-                            text: 'Error al procesar la respuesta del servidor'
+                            text: errorMessage
                         });
                     }
                 },
-                error: function() {
+                error: function(xhr, status, error) {
+                    console.log('Error AJAX:', {xhr, status, error});
+                    console.log('Response Text:', xhr.responseText);
+                    
+                    let errorMessage = 'Error de conexión al crear el cliente';
+                    if (xhr.status === 400) {
+                        errorMessage += ' (Datos inválidos)';
+                    } else if (xhr.status === 500) {
+                        errorMessage += ' (Error del servidor)';
+                    } else if (xhr.status === 0) {
+                        errorMessage += ' (Sin conexión)';
+                    }
+                    
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: 'Error de conexión al crear el cliente'
+                        text: errorMessage
                     });
                 }
             });

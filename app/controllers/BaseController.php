@@ -37,7 +37,21 @@ abstract class BaseController {
 
     // Respuesta JSON
     protected function json($data, $statusCode = 200) {
-        safeJsonResponse($data, $statusCode);
+        // Limpiar cualquier salida anterior que pueda interferir con JSON
+        while (ob_get_level()) {
+            ob_end_clean();
+        }
+        
+        // Asegurar que no se hayan enviado headers aún
+        if (!headers_sent()) {
+            http_response_code($statusCode);
+            header('Content-Type: application/json; charset=utf-8');
+            header('Cache-Control: no-cache, must-revalidate');
+        }
+        
+        // Devolver JSON
+        echo json_encode($data, JSON_UNESCAPED_UNICODE);
+        exit;
     }
 
     // Redireccionar
