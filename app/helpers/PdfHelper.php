@@ -37,6 +37,85 @@ class PdfHelper {
     }
 
     /**
+     * Limpiar y parsear fecha que puede contener HTML
+     */
+    private static function parsearFecha($fechaString) {
+        if (empty($fechaString)) {
+            return false;
+        }
+
+        // Remover HTML tags y limpiar la cadena
+        $fechaLimpia = strip_tags($fechaString);
+        $fechaLimpia = trim($fechaLimpia);
+        
+        // Si contiene "Hora:", extraer solo la parte de la fecha
+        if (strpos($fechaLimpia, 'Hora:') !== false) {
+            $partes = explode('Hora:', $fechaLimpia);
+            $fechaLimpia = trim($partes[0]);
+        }
+        
+        // Intentar parsear la fecha
+        $timestamp = strtotime($fechaLimpia);
+        
+        // Si falla, intentar con formato específico
+        if ($timestamp === false) {
+            // Intentar con formato Y-m-d
+            if (preg_match('/(\d{4}-\d{2}-\d{2})/', $fechaLimpia, $matches)) {
+                $timestamp = strtotime($matches[1]);
+            }
+        }
+        
+        return $timestamp !== false ? $timestamp : time(); // Fallback a fecha actual
+    }
+
+    /**
+     * Extraer hora de una cadena que puede contener HTML
+     */
+    private static function extraerHora($fechaString) {
+        if (empty($fechaString)) {
+            return '00:00:00';
+        }
+
+        // Remover HTML tags y limpiar la cadena
+        $fechaLimpia = strip_tags($fechaString);
+        $fechaLimpia = trim($fechaLimpia);
+        
+        // Buscar patrón de hora (HH:MM:SS)
+        if (preg_match('/(\d{2}:\d{2}:\d{2})/', $fechaLimpia, $matches)) {
+            return $matches[1];
+        }
+        
+        // Si no encuentra hora específica, intentar extraer de "Hora:"
+        if (strpos($fechaLimpia, 'Hora:') !== false) {
+            $partes = explode('Hora:', $fechaLimpia);
+            if (count($partes) > 1) {
+                $hora = trim($partes[1]);
+                if (preg_match('/(\d{2}:\d{2}:\d{2})/', $hora, $matches)) {
+                    return $matches[1];
+                }
+            }
+        }
+        
+        return '00:00:00'; // Fallback
+    }
+
+    /**
+     * Formatear fecha de salida - solo mostrar si existe
+     */
+    private static function formatearFechaSalida($servicio) {
+        // Verificar si existe fecha_programacion (fecha de solución/entrega)
+        if (!empty($servicio['fecha_programacion'])) {
+            $fechaSalida = self::parsearFecha($servicio['fecha_programacion']);
+            if ($fechaSalida) {
+                return 'Salida: ' . date('Y-m-d', $fechaSalida);
+            }
+        }
+        
+        // Si no hay fecha de salida definida, no mostrar nada
+        return '';
+    }
+
+    /**
      * Generar HTML para la orden de servicio
      */
     private static function generarHTMLOrdenServicio($servicio, $empresa, $clausulas) {
@@ -97,7 +176,7 @@ class PdfHelper {
                     margin-bottom: 3px;
                 }
                 .empresa-datos {
-                    font-size: 8px;
+                    font-size: 10px;
                     color: #333;
                     line-height: 1.1;
                 }
@@ -107,7 +186,7 @@ class PdfHelper {
                     margin-bottom: 5px;
                 }
                 .orden-info {
-                    font-size: 8px;
+                    font-size: 10px;
                     color: #333;
                 }
                 .tabla-cliente {
@@ -208,9 +287,9 @@ class PdfHelper {
                     <div class="header-columna header-columna-derecha">
                         <div class="orden-numero">No. Orden: ' . $servicio['IdServicio'] . '</div>
                         <div class="orden-info">
-                            Fecha: ' . date('Y-m-d', strtotime($servicio['FechaIngreso'])) . '<br>
-                            Hora: ' . date('H:i:s', strtotime($servicio['FechaIngreso'])) . '<br>
-                            Salida: ' . date('Y-m-d', strtotime($servicio['FechaIngreso']) + (2 * 24 * 60 * 60)) . '
+                            Fecha: ' . date('Y-m-d', self::parsearFecha($servicio['FechaIngreso'])) . '<br>
+                            Hora: ' . self::extraerHora($servicio['FechaIngreso']) . '<br>
+                            ' . self::formatearFechaSalida($servicio) . '
                         </div>
                     </div>
                 </div>
