@@ -550,10 +550,6 @@
                             return false;
                         }
 
-                        if (field.id === 'problema' && value && value.length < 10) {
-                            $field.addClass('form__control--invalid');
-                            return false;
-                        }
 
                         // Si pasa todas las validaciones
                         if (value) {

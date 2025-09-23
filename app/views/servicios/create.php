@@ -202,24 +202,8 @@ if (isset($_SESSION['flash_message'])) {
                             <div class="form__feedback form__feedback--invalid" id="error-IdTipoServicio"></div>
                         </div>
 
-                        <!-- Estado -->
-                        <div class="service-info__field">
-                            <label class="service-info__label" for="IdEstadoEnTaller">
-                                Estado <span class="form__required">*</span>
-                            </label>
-                            <div class="service-info__input">
-                                <i class="fas fa-exchange-alt service-info__icon"></i>
-                                <select class="form__control" id="IdEstadoEnTaller" name="IdEstadoEnTaller" required>
-                                    <option value="1">Espera</option>
-                                    <?php foreach ($estados as $estado): ?>
-                                        <option value="<?= $estado['id'] ?>">
-                                            <?= htmlspecialchars($estado['descripcion']) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <div class="form__feedback form__feedback--invalid" id="error-IdEstadoEnTaller"></div>
-                        </div>
+                        <!-- Estado (oculto - siempre será "En Espera") -->
+                        <input type="hidden" id="IdEstadoEnTaller" name="IdEstadoEnTaller" value="1">
 
                         <!-- Condiciones de Entrega -->
                         <div class="service-info__field service-info__field--full-width">

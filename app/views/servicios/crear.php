@@ -321,12 +321,6 @@ $(document).ready(function() {
             isValid = false;
         }
 
-        // Validar longitud mínima de problema
-        const problema = $('#Problema').val().trim();
-        if (problema.length > 0 && problema.length < 10) {
-            $('#Problema').addClass('is-invalid');
-            isValid = false;
-        }
 
         if (!isValid) {
             e.preventDefault();
