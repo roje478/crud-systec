@@ -4,6 +4,7 @@ $servicios = $servicios ?? [];
 $estados = $estados ?? [];
 $esTecnico = $esTecnico ?? false;
 $esAsesor = $esAsesor ?? false;
+
 ?>
 
 <?php if ($esTecnico): ?>
@@ -96,8 +97,8 @@ $esAsesor = $esAsesor ?? false;
                             <i class="fas fa-edit"></i>
                         </a>
 
-                        <?php if (!$esAsesor): ?>
-                        <!-- Botón de cambiar estado - NO visible para asesores -->
+                        <?php if (!$esAsesor && !$esTecnico): ?>
+                        <!-- Botón de cambiar estado - NO visible para asesores ni técnicos -->
                         <div class="btn-group" role="group">
                             <button class="btn btn-sm btn-outline-info dropdown-toggle"
                                     type="button" data-bs-toggle="dropdown" title="Cambiar estado">

@@ -68,8 +68,19 @@
                                     </div>
                                 <?php endif; ?>
                                 <div class="service-detail__header-actions">
-                                    <?php if (!$esAsesor): ?>
-                                    <!-- Botón de cambiar estado - NO visible para asesores -->
+                                    <?php 
+                                    // Mostrar botón de cambiar estado solo si:
+                                    // 1. No es asesor Y no es técnico (usuarios admin, etc.) - SIEMPRE pueden cambiar estado
+                                    // 2. Es técnico PERO el servicio NO está terminado (ID != 3) - técnicos NO pueden cambiar estado si está terminado
+                                    $mostrarCambiarEstado = (!$esAsesor && !$esTecnico) || 
+                                                          ($esTecnico && $servicio['IdEstadoEnTaller'] != 3);
+                                    
+                                    // Debug temporal - REMOVER DESPUÉS
+                                    echo "<!-- DEBUG: esTecnico=" . ($esTecnico ? 'true' : 'false') . ", esAsesor=" . ($esAsesor ? 'true' : 'false') . ", estadoId=" . $servicio['IdEstadoEnTaller'] . ", mostrarCambiarEstado=" . ($mostrarCambiarEstado ? 'true' : 'false') . " -->";
+                                    ?>
+                                    
+                                    <?php if ($mostrarCambiarEstado): ?>
+                                    <!-- Botón de cambiar estado -->
                                     <div class="dropdown d-inline">
                                         <button class="btn btn--outline dropdown-toggle" type="button" data-bs-toggle="dropdown">
                                             <i class="fas fa-exchange-alt btn__icon"></i>Cambiar Estado

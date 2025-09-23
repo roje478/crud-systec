@@ -12,12 +12,15 @@ class ServicioController extends BaseController {
     // Listar servicios con DataTables
     public function index() {
         // Verificar si el usuario es técnico
-        $esTecnico = isset($_SESSION['usuario_perfil_nombre']) &&
-                   strtolower($_SESSION['usuario_perfil_nombre']) === 'tecnico';
+        $perfilNombre = $_SESSION['usuario_perfil_nombre'] ?? '';
+        $esTecnico = !empty($perfilNombre) && 
+                   (strtolower(trim($perfilNombre)) === 'técnico' || 
+                    strtolower(trim($perfilNombre)) === 'tecnico');
 
         // Verificar si el usuario es asesor
-        $esAsesor = isset($_SESSION['usuario_perfil_nombre']) &&
-                   strtolower($_SESSION['usuario_perfil_nombre']) === 'asesor';
+        $esAsesor = !empty($perfilNombre) && 
+                   strtolower(trim($perfilNombre)) === 'asesor';
+
 
         if ($esTecnico) {
             // Para técnicos, obtener solo los servicios asignados a ellos
@@ -41,6 +44,16 @@ class ServicioController extends BaseController {
 
     // Lista completa de servicios - TODOS los servicios sin límite con paginación de DataTables
     public function listaCompleta() {
+        // Verificar si el usuario es técnico
+        $perfilNombre = $_SESSION['usuario_perfil_nombre'] ?? '';
+        $esTecnico = !empty($perfilNombre) && 
+                   (strtolower(trim($perfilNombre)) === 'técnico' || 
+                    strtolower(trim($perfilNombre)) === 'tecnico');
+
+        // Verificar si el usuario es asesor
+        $esAsesor = !empty($perfilNombre) && 
+                   strtolower(trim($perfilNombre)) === 'asesor';
+
         // Obtener TODOS los servicios sin límite (DataTables manejará la paginación)
         $servicios = $this->servicioModel->getAllServiciosCompletos();
 
@@ -54,7 +67,9 @@ class ServicioController extends BaseController {
         $this->render('servicios/lista_completa', compact(
             'servicios',
             'estados',
-            'totalServicios'
+            'totalServicios',
+            'esTecnico',
+            'esAsesor'
         ));
     }
 
@@ -67,12 +82,14 @@ class ServicioController extends BaseController {
     // Mostrar vista de búsqueda de servicios (versión mejorada)
     public function buscar() {
         // Verificar si el usuario es técnico
-        $esTecnico = isset($_SESSION['usuario_perfil_nombre']) &&
-                   strtolower($_SESSION['usuario_perfil_nombre']) === 'tecnico';
+        $perfilNombre = $_SESSION['usuario_perfil_nombre'] ?? '';
+        $esTecnico = !empty($perfilNombre) && 
+                   (strtolower(trim($perfilNombre)) === 'técnico' || 
+                    strtolower(trim($perfilNombre)) === 'tecnico');
 
         // Verificar si el usuario es asesor
-        $esAsesor = isset($_SESSION['usuario_perfil_nombre']) &&
-                   strtolower($_SESSION['usuario_perfil_nombre']) === 'asesor';
+        $esAsesor = !empty($perfilNombre) && 
+                   strtolower(trim($perfilNombre)) === 'asesor';
 
         // Obtener estados disponibles para los dropdowns
         $estados = $this->servicioModel->getEstados();
@@ -87,12 +104,14 @@ class ServicioController extends BaseController {
     // Mostrar vista de búsqueda simplificada para diagnóstico
     public function buscarSimple() {
         // Verificar si el usuario es técnico
-        $esTecnico = isset($_SESSION['usuario_perfil_nombre']) &&
-                   strtolower($_SESSION['usuario_perfil_nombre']) === 'tecnico';
+        $perfilNombre = $_SESSION['usuario_perfil_nombre'] ?? '';
+        $esTecnico = !empty($perfilNombre) && 
+                   (strtolower(trim($perfilNombre)) === 'técnico' || 
+                    strtolower(trim($perfilNombre)) === 'tecnico');
 
         // Verificar si el usuario es asesor
-        $esAsesor = isset($_SESSION['usuario_perfil_nombre']) &&
-                   strtolower($_SESSION['usuario_perfil_nombre']) === 'asesor';
+        $esAsesor = !empty($perfilNombre) && 
+                   strtolower(trim($perfilNombre)) === 'asesor';
 
         // Obtener estados disponibles para los dropdowns
         $estados = $this->servicioModel->getEstados();
@@ -106,12 +125,14 @@ class ServicioController extends BaseController {
     // Mostrar vista de búsqueda mejorada (versión final)
     public function buscarMejorada() {
         // Verificar si el usuario es técnico
-        $esTecnico = isset($_SESSION['usuario_perfil_nombre']) &&
-                   strtolower($_SESSION['usuario_perfil_nombre']) === 'tecnico';
+        $perfilNombre = $_SESSION['usuario_perfil_nombre'] ?? '';
+        $esTecnico = !empty($perfilNombre) && 
+                   (strtolower(trim($perfilNombre)) === 'técnico' || 
+                    strtolower(trim($perfilNombre)) === 'tecnico');
 
         // Verificar si el usuario es asesor
-        $esAsesor = isset($_SESSION['usuario_perfil_nombre']) &&
-                   strtolower($_SESSION['usuario_perfil_nombre']) === 'asesor';
+        $esAsesor = !empty($perfilNombre) && 
+                   strtolower(trim($perfilNombre)) === 'asesor';
 
         // Obtener estados disponibles para los dropdowns
         $estados = $this->servicioModel->getEstados();
@@ -190,12 +211,20 @@ class ServicioController extends BaseController {
         }
 
         // Verificar si el usuario es técnico y si el servicio le fue asignado
-        $esTecnico = isset($_SESSION['usuario_perfil_nombre']) &&
-                   strtolower($_SESSION['usuario_perfil_nombre']) === 'tecnico';
+        $perfilNombre = $_SESSION['usuario_perfil_nombre'] ?? '';
+        $esTecnico = !empty($perfilNombre) && 
+                   (strtolower(trim($perfilNombre)) === 'técnico' || 
+                    strtolower(trim($perfilNombre)) === 'tecnico');
 
         // Verificar si el usuario es asesor
-        $esAsesor = isset($_SESSION['usuario_perfil_nombre']) &&
-                   strtolower($_SESSION['usuario_perfil_nombre']) === 'asesor';
+        $esAsesor = !empty($perfilNombre) && 
+                   strtolower(trim($perfilNombre)) === 'asesor';
+
+        // Debug temporal - REMOVER DESPUÉS
+        error_log("DEBUG ServicioController::view() - perfilNombre: '$perfilNombre'");
+        error_log("DEBUG ServicioController::view() - esTecnico: " . ($esTecnico ? 'true' : 'false'));
+        error_log("DEBUG ServicioController::view() - esAsesor: " . ($esAsesor ? 'true' : 'false'));
+        error_log("DEBUG ServicioController::view() - servicio estado: " . $servicio['IdEstadoEnTaller']);
 
         if ($esTecnico) {
             $tecnicoId = $_SESSION['usuario_id'] ?? null;
@@ -221,7 +250,7 @@ class ServicioController extends BaseController {
 
         // Verificar si el usuario es técnico y si el servicio le fue asignado
         $esTecnico = isset($_SESSION['usuario_perfil_nombre']) &&
-                   strtolower($_SESSION['usuario_perfil_nombre']) === 'tecnico';
+                   strtolower($_SESSION['usuario_perfil_nombre']) === 'Técnico';
 
         if ($esTecnico) {
             $tecnicoId = $_SESSION['usuario_id'] ?? null;
@@ -312,8 +341,10 @@ class ServicioController extends BaseController {
             }
 
             // Verificar permisos si es técnico
-            $esTecnico = isset($_SESSION['usuario_perfil_nombre']) &&
-                       strtolower($_SESSION['usuario_perfil_nombre']) === 'tecnico';
+            $perfilNombre = $_SESSION['usuario_perfil_nombre'] ?? '';
+            $esTecnico = !empty($perfilNombre) && 
+                       (strtolower(trim($perfilNombre)) === 'técnico' || 
+                        strtolower(trim($perfilNombre)) === 'tecnico');
 
             if ($esTecnico) {
                 $tecnicoId = $_SESSION['usuario_id'] ?? null;
