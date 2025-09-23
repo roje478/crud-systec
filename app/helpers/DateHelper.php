@@ -13,8 +13,15 @@ class DateHelper {
             return '-';
         }
 
-        // Limpiar HTML tags como <br>
+        // Limpiar HTML tags como <br>, </br>, etc.
         $fechaLimpia = strip_tags($fechaString);
+        $fechaLimpia = trim($fechaLimpia);
+        
+        // Si contiene "Hora:", extraer solo la parte de la fecha
+        if (strpos($fechaLimpia, 'Hora:') !== false) {
+            $partes = explode('Hora:', $fechaLimpia);
+            $fechaLimpia = trim($partes[0]);
+        }
 
         // Patrón para extraer fecha en formato YYYY-MM-DD
         if (preg_match('/(\d{4}-\d{2}-\d{2})/', $fechaLimpia, $matches)) {
@@ -54,6 +61,7 @@ class DateHelper {
 
         // Limpiar HTML tags
         $fechaLimpia = strip_tags($fechaString);
+        $fechaLimpia = trim($fechaLimpia);
 
         // Patrón para extraer fecha y hora YYYY-MM-DD y HH:MM:SS
         if (preg_match('/(\d{4}-\d{2}-\d{2}).*?(\d{2}:\d{2}:\d{2})/', $fechaLimpia, $matches)) {
@@ -63,6 +71,24 @@ class DateHelper {
             $timestamp = strtotime("$fecha $hora");
             if ($timestamp !== false) {
                 return date('d/m/Y H:i', $timestamp);
+            }
+        }
+
+        // Si no encuentra hora específica, intentar extraer de "Hora:"
+        if (strpos($fechaLimpia, 'Hora:') !== false) {
+            $partes = explode('Hora:', $fechaLimpia);
+            if (count($partes) > 1) {
+                $fecha = trim($partes[0]);
+                $hora = trim($partes[1]);
+                
+                // Buscar patrón de hora en la segunda parte
+                if (preg_match('/(\d{2}:\d{2}:\d{2})/', $hora, $horaMatches)) {
+                    $horaExtraida = $horaMatches[1];
+                    $timestamp = strtotime("$fecha $horaExtraida");
+                    if ($timestamp !== false) {
+                        return date('d/m/Y H:i', $timestamp);
+                    }
+                }
             }
         }
 
