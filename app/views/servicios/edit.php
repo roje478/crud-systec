@@ -50,6 +50,9 @@
                             $tecnicoPuedeEditarSolucion = $esTecnico && !$servicioTerminado;
                             $tecnicoPuedeEditarNota = $esTecnico && !$servicioTerminado;
                             
+                            // Verificar si el técnico tiene permiso para cambiar técnico asignado
+                            $tecnicoPuedeCambiarTecnico = $esTecnico && !$servicioTerminado && PermisoHelper::tienePermiso('cambiar_tecnico_servicio');
+                            
                             // Administradores siempre pueden editar todo
                             $administradorPuedeEditarCosto = $esAdministrador;
                             $administradorPuedeEditarEstado = $esAdministrador;
@@ -80,7 +83,10 @@
                                                     "Solución Aplicada", 
                                                 <?php endif; ?>
                                                 <?php if ($tecnicoPuedeEditarNota): ?>
-                                                    "Nota Interna" 
+                                                    "Nota Interna", 
+                                                <?php endif; ?>
+                                                <?php if ($tecnicoPuedeCambiarTecnico): ?>
+                                                    "Técnico Asignado", 
                                                 <?php endif; ?>
                                                 <?php if ($tecnicoPuedeEditarCosto): ?>
                                                     y "Costo"
@@ -153,7 +159,10 @@
                                 <?php elseif ($esTecnico && !$servicioTerminado): ?>
                                     <!-- Técnico con servicio no terminado: solo campos editables no son hidden -->
                                     <input type="hidden" name="idcliente" value="<?= htmlspecialchars($servicio['NoIdentificacionCliente'] ?? '') ?>">
-                                    <input type="hidden" name="NoIdentificacionEmpleado" value="<?= htmlspecialchars($servicio['NoIdentificacionEmpleado'] ?? '') ?>">
+                                    <?php if (!$tecnicoPuedeCambiarTecnico): ?>
+                                        <!-- Solo ocultar técnico si no tiene permiso para cambiarlo -->
+                                        <input type="hidden" name="NoIdentificacionEmpleado" value="<?= htmlspecialchars($servicio['NoIdentificacionEmpleado'] ?? '') ?>">
+                                    <?php endif; ?>
                                     <input type="hidden" name="equipo" value="<?= htmlspecialchars($servicio['Equipo'] ?? '') ?>">
                                     <input type="hidden" name="IdTipoServicio" value="<?= htmlspecialchars($servicio['IdTipoServicio'] ?? '') ?>">
                                     <input type="hidden" name="condicionesentrega" value="<?= htmlspecialchars($servicio['CondicionesEntrega'] ?? '') ?>">
@@ -212,7 +221,7 @@
                                     <div class="service-info__input">
                                         <i class="fas fa-user-cog service-info__icon"></i>
                                         <select class="form__control" id="NoIdentificacionEmpleado" name="NoIdentificacionEmpleado"
-                                                <?= ($esTecnico || $esAsesor) ? 'disabled' : '' ?>>
+                                                <?= (($esTecnico && !$tecnicoPuedeCambiarTecnico) || $esAsesor) ? 'disabled' : '' ?>>
                                             <option value="">Seleccionar técnico</option>
                                             <?php if (!empty($tecnicos)): ?>
                                                 <?php foreach ($tecnicos as $tecnico): ?>
@@ -226,6 +235,12 @@
                                         </select>
                                     </div>
                                     <div class="form__feedback form__feedback--invalid" id="error-NoIdentificacionEmpleado"></div>
+                                    <?php if ($tecnicoPuedeCambiarTecnico): ?>
+                                        <div class="form__feedback form__feedback--info">
+                                            <i class="fas fa-info-circle"></i>
+                                            <span>Tienes permiso para cambiar el técnico asignado a este servicio.</span>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
 
                                 <!-- Equipo -->

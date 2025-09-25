@@ -277,6 +277,30 @@ class ServicioController extends BaseController {
         $data = $this->getPostData();
         error_log("ServicioController::update() - Datos recibidos: " . json_encode($data));
 
+        // Obtener el servicio actual para validaciones
+        $servicioActual = $this->servicioModel->getByIdWithDetails($id);
+        if (!$servicioActual) {
+            $this->json(['success' => false, 'message' => 'Servicio no encontrado'], 404);
+        }
+
+        // Verificar permisos para cambiar técnico asignado
+        $perfilNombre = $_SESSION['usuario_perfil_nombre'] ?? '';
+        $esTecnico = !empty($perfilNombre) && 
+                   (strtolower(trim($perfilNombre)) === 'técnico' || 
+                    strtolower(trim($perfilNombre)) === 'tecnico');
+        
+        $servicioTerminado = isset($servicioActual['IdEstadoEnTaller']) && $servicioActual['IdEstadoEnTaller'] == 3;
+        $tecnicoPuedeCambiarTecnico = $esTecnico && !$servicioTerminado && PermisoHelper::tienePermiso('cambiar_tecnico_servicio');
+        
+        // Si el técnico está intentando cambiar el técnico asignado, verificar permisos
+        if ($esTecnico && isset($data['NoIdentificacionEmpleado']) && 
+            $data['NoIdentificacionEmpleado'] != $servicioActual['NoIdentificacionEmpleado']) {
+            
+            if (!$tecnicoPuedeCambiarTecnico) {
+                $this->json(['success' => false, 'message' => 'No tienes permisos para cambiar el técnico asignado'], 403);
+            }
+        }
+
         // Validación básica
         $required = ['idcliente', 'IdTipoServicio', 'equipo', 'problema', 'IdEstadoEnTaller'];
         $errors = $this->validateRequired($data, $required);

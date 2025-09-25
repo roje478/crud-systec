@@ -129,6 +129,68 @@
                                         </div>
                                     </div>
                                 <?php endif; ?>
+
+                                <!-- Opciones especiales (códigos largos) -->
+                                <?php
+                                // Crear lista de descripciones ya mostradas en submenus
+                                $descripcionesMostradas = [];
+                                foreach ($submenus as $codigo => $menuPrincipal) {
+                                    $subopciones = array_filter($opciones, function($opcion) use ($codigo) {
+                                        return $opcion['submenu'] == 0 &&
+                                               strpos($opcion['codigo'], $codigo) === 0;
+                                    });
+                                    foreach ($subopciones as $subopcion) {
+                                        $descripcionesMostradas[] = $subopcion['descripcion'];
+                                    }
+                                }
+                                
+                                // Filtrar opciones especiales (códigos largos que no son subopciones)
+                                $opcionesEspeciales = array_filter($opciones, function($opcion) use ($descripcionesMostradas) {
+                                    // Excluir opciones específicas que aparecen en otras secciones
+                                    $excluir = [
+                                        'estados_servicio',
+                                        'gestionar_clausulas', 
+                                        'informacion_empresa',
+                                        'tipos_servicio'
+                                    ];
+                                    
+                                    return $opcion['submenu'] == 0 &&
+                                           strlen($opcion['codigo']) > 2 &&
+                                           !preg_match('/^\d{2}/', $opcion['codigo']) && // No empieza con 2 dígitos
+                                           !in_array($opcion['codigo'], $excluir) && // No está en la lista de exclusión
+                                           !in_array($opcion['descripcion'], $descripcionesMostradas); // No está ya mostrada en submenus
+                                });
+                                ?>
+
+                                <?php if (!empty($opcionesEspeciales)): ?>
+                                    <div class="col-md-6 mb-4">
+                                        <div class="card card--outline">
+                                            <div class="card__header">
+                                                <h5 class="card__title">
+                                                    <i class="fas fa-cogs"></i>
+                                                    Opciones Especiales
+                                                </h5>
+                                            </div>
+                                            <div class="card__body">
+                                                <?php foreach ($opcionesEspeciales as $opcion): ?>
+                                                    <div class="form__group">
+                                                        <label class="form__label">
+                                                            <input type="checkbox"
+                                                                   name="opciones[]"
+                                                                   value="<?= $opcion['codigo'] ?>"
+                                                                   class="form__control"
+                                                                   <?= in_array($opcion['codigo'], $codigosAsignados) ? 'checked' : '' ?>>
+                                                            <span class="ml-2">
+                                                                <i class="<?= $opcion['icono'] ?: 'fas fa-cog' ?> text-muted"></i>
+                                                                <?= htmlspecialchars($opcion['descripcion']) ?>
+                                                            </span>
+                                                        </label>
+                                                    </div>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         <?php else: ?>
                             <div class="alert alert--info">
