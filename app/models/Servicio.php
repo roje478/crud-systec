@@ -402,4 +402,69 @@ class Servicio extends BaseModel {
         $stmt->execute([$searchTerm, $searchTerm, $searchTerm, $searchTerm, $searchTerm]);
         return $stmt->fetchAll();
     }
+
+    // Buscar servicios para autocompletado - Solo para técnicos (servicios asignados)
+    public function buscarServiciosByTecnico($query, $tecnicoId) {
+        $sql = "SELECT
+                    s.*,
+                    CONCAT(c.nombres, ' ', c.apellidos) as cliente_nombre,
+                    c.no_identificacion as cliente_identificacion,
+                    c.telefono as cliente_telefono,
+                    et.Descripcion as estado_descripcion,
+                    CONCAT(t.nombres, ' ', t.apellidos) as tecnico_nombre,
+                    ts.Descripcion as tipo_servicio_descripcion,
+                    'asignado' as tipo_resultado
+                FROM servicio s
+                LEFT JOIN cliente c ON s.NoIdentificacionCliente = c.no_identificacion
+                LEFT JOIN estadoentaller et ON s.IdEstadoEnTaller = et.IdEstadoEnTaller
+                LEFT JOIN cliente t ON s.NoIdentificacionEmpleado = t.no_identificacion
+                LEFT JOIN tiposervicio ts ON s.IdTipoServicio = ts.IdTipoServicio
+                WHERE s.NoIdentificacionEmpleado = ? 
+                  AND (
+                    s.equipo LIKE ? OR
+                    s.problema LIKE ? OR
+                    CONCAT(c.nombres, ' ', c.apellidos) LIKE ? OR
+                    c.no_identificacion LIKE ? OR
+                    s.IdServicio LIKE ?
+                  )
+                ORDER BY s.IdServicio DESC
+                LIMIT 10";
+        $searchTerm = "%{$query}%";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$tecnicoId, $searchTerm, $searchTerm, $searchTerm, $searchTerm, $searchTerm]);
+        return $stmt->fetchAll();
+    }
+
+    // Buscar servicios de otros técnicos para mostrar mensaje informativo
+    public function buscarServiciosOtrosTecnicos($query, $tecnicoId) {
+        $sql = "SELECT
+                    s.*,
+                    CONCAT(c.nombres, ' ', c.apellidos) as cliente_nombre,
+                    c.no_identificacion as cliente_identificacion,
+                    c.telefono as cliente_telefono,
+                    et.Descripcion as estado_descripcion,
+                    CONCAT(t.nombres, ' ', t.apellidos) as tecnico_nombre,
+                    ts.Descripcion as tipo_servicio_descripcion,
+                    'otro_tecnico' as tipo_resultado
+                FROM servicio s
+                LEFT JOIN cliente c ON s.NoIdentificacionCliente = c.no_identificacion
+                LEFT JOIN estadoentaller et ON s.IdEstadoEnTaller = et.IdEstadoEnTaller
+                LEFT JOIN cliente t ON s.NoIdentificacionEmpleado = t.no_identificacion
+                LEFT JOIN tiposervicio ts ON s.IdTipoServicio = ts.IdTipoServicio
+                WHERE s.NoIdentificacionEmpleado IS NOT NULL 
+                  AND s.NoIdentificacionEmpleado != ?
+                  AND (
+                    s.equipo LIKE ? OR
+                    s.problema LIKE ? OR
+                    CONCAT(c.nombres, ' ', c.apellidos) LIKE ? OR
+                    c.no_identificacion LIKE ? OR
+                    s.IdServicio LIKE ?
+                  )
+                ORDER BY s.IdServicio DESC
+                LIMIT 3";
+        $searchTerm = "%{$query}%";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$tecnicoId, $searchTerm, $searchTerm, $searchTerm, $searchTerm, $searchTerm]);
+        return $stmt->fetchAll();
+    }
 }

@@ -387,7 +387,47 @@ class ServicioController extends BaseController {
             $this->json(['success' => true, 'servicios' => []]);
             return;
         }
-        $servicios = $this->servicioModel->buscarServicios($query);
+
+        // Verificar si el usuario es técnico
+        $perfilNombre = $_SESSION['usuario_perfil_nombre'] ?? '';
+        $esTecnico = !empty($perfilNombre) && 
+                   (strtolower(trim($perfilNombre)) === 'técnico' || 
+                    strtolower(trim($perfilNombre)) === 'tecnico');
+
+        if ($esTecnico) {
+            // Para técnicos, buscar solo en sus servicios asignados
+            $tecnicoId = $_SESSION['usuario_id'] ?? null;
+            if ($tecnicoId) {
+                $servicios = $this->servicioModel->buscarServiciosByTecnico($query, $tecnicoId);
+                
+                // Si no hay resultados, buscar en servicios de otros técnicos para mostrar mensaje informativo
+                if (empty($servicios)) {
+                    $serviciosOtrosTecnicos = $this->servicioModel->buscarServiciosOtrosTecnicos($query, $tecnicoId);
+                    if (!empty($serviciosOtrosTecnicos)) {
+                        // Agregar mensaje informativo
+                        $servicios = [
+                            [
+                                'IdServicio' => 'info',
+                                'cliente_nombre' => 'Servicio encontrado en otro técnico',
+                                'Equipo' => 'El servicio existe pero está asignado a otro técnico',
+                                'Problema' => 'Contacta al administrador si necesitas acceso',
+                                'estado_descripcion' => 'Información',
+                                'tecnico_nombre' => $serviciosOtrosTecnicos[0]['tecnico_nombre'] ?? 'Otro técnico',
+                                'FechaIngreso' => date('Y-m-d H:i:s'),
+                                'tipo_resultado' => 'mensaje_info',
+                                'servicios_otros_tecnicos' => $serviciosOtrosTecnicos
+                            ]
+                        ];
+                    }
+                }
+            } else {
+                $servicios = [];
+            }
+        } else {
+            // Para otros usuarios, buscar en todos los servicios
+            $servicios = $this->servicioModel->buscarServicios($query);
+        }
+
         $this->json(['success' => true, 'servicios' => $servicios]);
     }
 

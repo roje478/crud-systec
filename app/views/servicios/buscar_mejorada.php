@@ -195,52 +195,75 @@ function mostrarResultadosEnTabla(servicios) {
     
     let html = '';
     servicios.forEach(function(servicio) {
-        const statusClass = getStatusClass(servicio.IdEstadoEnTaller);
-        const fechaFormateada = formatearFecha(servicio.FechaIngreso);
-        
-        html += `
-            <tr>
-                <td class="fw-bold">${servicio.IdServicio}</td>
-                <td>${ucfirst(strtolower(servicio.cliente_nombre || 'N/A'))}</td>
-                <td>${ucfirst(strtolower(servicio.Equipo || '-'))}</td>
-                <td>
-                    ${ucfirst(strtolower(substr(servicio.Problema || '', 0, 30)))}
-                    ${(servicio.Problema || '').length > 30 ? '...' : ''}
-                </td>
-                <td>
-                    <span class="${statusClass}">
-                        ${ucfirst(strtolower(servicio.estado_descripcion || 'N/A'))}
-                    </span>
-                </td>
-                <td>${ucfirst(strtolower(servicio.tecnico_nombre || 'Sin asignar'))}</td>
-                <td>${fechaFormateada}</td>
-                <td class="text-center">
-                    <div class="btn-group" role="group">
-                        <a href="index.php?route=servicios/view/${servicio.IdServicio}"
-                           class="btn btn-sm btn-outline-primary" title="Ver detalles">
-                            <i class="fas fa-external-link-alt"></i>
-                        </a>
-
-                        <a href="index.php?route=servicios/edit/${servicio.IdServicio}"
-                           class="btn btn-sm btn-outline-secondary" title="Editar">
-                            <i class="fas fa-edit"></i>
-                        </a>
-
-                        ${!<?= $esAsesor ? 'true' : 'false' ?> && !<?= $esTecnico ? 'true' : 'false' ?> ? `
-                        <div class="btn-group" role="group">
-                            <button class="btn btn-sm btn-outline-info dropdown-toggle"
-                                    type="button" data-bs-toggle="dropdown" title="Cambiar estado">
-                                <i class="fas fa-exchange-alt"></i>
-                            </button>
-                            <ul class="dropdown-menu">
-                                ${generarOpcionesEstados(servicio.IdEstadoEnTaller)}
-                            </ul>
+        // Verificar si es un mensaje informativo
+        if (servicio.tipo_resultado === 'mensaje_info') {
+            html += `
+                <tr class="table-info">
+                    <td colspan="8" class="text-center py-4">
+                        <div class="alert alert-info mb-0">
+                            <div class="d-flex align-items-center justify-content-center">
+                                <i class="fas fa-info-circle fa-2x me-3"></i>
+                                <div class="text-start">
+                                    <h6 class="alert-heading mb-1">${servicio.cliente_nombre}</h6>
+                                    <p class="mb-1">${servicio.Equipo}</p>
+                                    <p class="mb-0"><strong>Técnico asignado:</strong> ${servicio.tecnico_nombre}</p>
+                                    <small class="text-muted">${servicio.Problema}</small>
+                                </div>
+                            </div>
                         </div>
-                        ` : ''}
-                    </div>
-                </td>
-            </tr>
-        `;
+                    </td>
+                </tr>
+            `;
+            
+        } else {
+            // Servicio normal
+            const statusClass = getStatusClass(servicio.IdEstadoEnTaller);
+            const fechaFormateada = formatearFecha(servicio.FechaIngreso);
+            
+            html += `
+                <tr>
+                    <td class="fw-bold">${servicio.IdServicio}</td>
+                    <td>${ucfirst(strtolower(servicio.cliente_nombre || 'N/A'))}</td>
+                    <td>${ucfirst(strtolower(servicio.Equipo || '-'))}</td>
+                    <td>
+                        ${ucfirst(strtolower(substr(servicio.Problema || '', 0, 30)))}
+                        ${(servicio.Problema || '').length > 30 ? '...' : ''}
+                    </td>
+                    <td>
+                        <span class="${statusClass}">
+                            ${ucfirst(strtolower(servicio.estado_descripcion || 'N/A'))}
+                        </span>
+                    </td>
+                    <td>${ucfirst(strtolower(servicio.tecnico_nombre || 'Sin asignar'))}</td>
+                    <td>${fechaFormateada}</td>
+                    <td class="text-center">
+                        <div class="btn-group" role="group">
+                            <a href="index.php?route=servicios/view/${servicio.IdServicio}"
+                               class="btn btn-sm btn-outline-primary" title="Ver detalles">
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+
+                            <a href="index.php?route=servicios/edit/${servicio.IdServicio}"
+                               class="btn btn-sm btn-outline-secondary" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </a>
+
+                            ${!<?= $esAsesor ? 'true' : 'false' ?> && !<?= $esTecnico ? 'true' : 'false' ?> ? `
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-sm btn-outline-info dropdown-toggle"
+                                        type="button" data-bs-toggle="dropdown" title="Cambiar estado">
+                                    <i class="fas fa-exchange-alt"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    ${generarOpcionesEstados(servicio.IdEstadoEnTaller)}
+                                </ul>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
     });
     
     tbody.html(html);
