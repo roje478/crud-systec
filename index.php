@@ -11,6 +11,23 @@ ini_set('display_errors', 1);
 // Iniciar buffer de salida para evitar problemas con headers
 ob_start();
 
+// Configurar y iniciar sesión
+require_once __DIR__ . '/config/auth.php';
+
+// Configurar parámetros de cookie de sesión para sesión de navegador
+session_set_cookie_params([
+    'lifetime' => SESSION_CONFIG['lifetime'], // 0 = Sesión de navegador
+    'path' => SESSION_CONFIG['path'],
+    'domain' => SESSION_CONFIG['domain'],
+    'secure' => SESSION_CONFIG['secure'],
+    'httponly' => SESSION_CONFIG['httponly'],
+    'samesite' => SESSION_CONFIG['samesite']
+]);
+
+// Configurar tiempo de vida de la sesión (0 = indefinido hasta cerrar navegador)
+ini_set('session.gc_maxlifetime', 0);
+ini_set('session.cache_expire', 0);
+
 // Iniciar sesión
 session_start();
 

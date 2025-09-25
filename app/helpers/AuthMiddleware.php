@@ -3,8 +3,10 @@
  * AuthMiddleware - Middleware para verificar autenticación
  */
 
-// Cargar configuración de autenticación
-require_once __DIR__ . '/../../config/auth.php';
+// Cargar configuración de autenticación solo si no está ya cargada
+if (!defined('SESSION_CONFIG')) {
+    require_once __DIR__ . '/../../config/auth.php';
+}
 
 class AuthMiddleware {
     

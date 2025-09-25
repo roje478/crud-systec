@@ -54,7 +54,7 @@ define('USER_PROFILES', [
 
 // Configuración de sesión
 define('SESSION_CONFIG', [
-    'lifetime' => 3600, // 1 hora
+    'lifetime' => 0, // 0 = Sesión de navegador (expira al cerrar ventana)
     'path' => '/',
     'domain' => '',
     'secure' => false, // Cambiar a true en producción con HTTPS
