@@ -3,6 +3,7 @@
 $servicios = $servicios ?? [];
 $estados = $estados ?? [];
 $esTecnico = $esTecnico ?? false;
+$esTecnicoAdministrador = $esTecnicoAdministrador ?? false;
 $esAsesor = $esAsesor ?? false;
 ?>
 
@@ -248,7 +249,7 @@ function mostrarResultadosEnTabla(servicios) {
                                 <i class="fas fa-edit"></i>
                             </a>
 
-                            ${!<?= $esAsesor ? 'true' : 'false' ?> && !<?= $esTecnico ? 'true' : 'false' ?> ? `
+                            ${!<?= $esAsesor ? 'true' : 'false' ?> && !<?= $esTecnico ? 'true' : 'false' ?> && !<?= $esTecnicoAdministrador ? 'true' : 'false' ?> ? `
                             <div class="btn-group" role="group">
                                 <button class="btn btn-sm btn-outline-info dropdown-toggle"
                                         type="button" data-bs-toggle="dropdown" title="Cambiar estado">

@@ -4,6 +4,7 @@ $servicios = $servicios ?? [];
 $estados = $estados ?? [];
 $esTecnico = $esTecnico ?? false;
 $esAsesor = $esAsesor ?? false;
+$esTecnicoAdministrador = $esTecnicoAdministrador ?? false;
 
 ?>
 
@@ -15,6 +16,19 @@ $esAsesor = $esAsesor ?? false;
         <div>
             <h5 class="alert-heading mb-1">Vista de Técnico</h5>
             <p class="mb-0">Solo se muestran los servicios asignados a tu perfil técnico.</p>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
+<?php if ($esTecnicoAdministrador): ?>
+<!-- Mensaje informativo para técnicos administradores -->
+<div class="alert alert-info mb-4">
+    <div class="d-flex align-items-center">
+        <i class="fas fa-user-shield me-3 fa-2x"></i>
+        <div>
+            <h5 class="alert-heading mb-1">Vista de Técnico Administrador</h5>
+            <p class="mb-0">Solo se muestran los servicios asignados a tu perfil técnico administrador. No puedes cambiar el estado de los servicios desde esta vista.</p>
         </div>
     </div>
 </div>
@@ -97,7 +111,7 @@ $esAsesor = $esAsesor ?? false;
                             <i class="fas fa-edit"></i>
                         </a>
 
-                        <?php if (!$esAsesor && !$esTecnico): ?>
+                        <?php if (!$esAsesor && !$esTecnico && !$esTecnicoAdministrador): ?>
                         <!-- Botón de cambiar estado - NO visible para asesores ni técnicos -->
                         <div class="btn-group" role="group">
                             <button class="btn btn-sm btn-outline-info dropdown-toggle"

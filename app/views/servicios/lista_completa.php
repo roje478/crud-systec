@@ -5,6 +5,7 @@ $estados = $estados ?? [];
 $totalServicios = $totalServicios ?? 0;
 $esTecnico = $esTecnico ?? false;
 $esAsesor = $esAsesor ?? false;
+$esTecnicoAdministrador = $esTecnicoAdministrador ?? false;
 ?>
 
 <!-- Table Container -->
@@ -71,7 +72,7 @@ $esAsesor = $esAsesor ?? false;
                             <i class="fas fa-edit"></i>
                         </a>
 
-                        <?php if (!$esAsesor && !$esTecnico): ?>
+                        <?php if (!$esAsesor && !$esTecnico && !$esTecnicoAdministrador): ?>
                         <!-- Botón de cambiar estado - NO visible para asesores ni técnicos -->
                         <div class="btn-group" role="group">
                             <button class="btn btn-sm btn-outline-info dropdown-toggle"

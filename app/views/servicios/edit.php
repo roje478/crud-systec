@@ -36,6 +36,9 @@
                             $perfilUsuario = $_SESSION['usuario_perfil_nombre'] ?? '';
                             $esTecnico = !empty($perfilUsuario) &&
                                        strtolower($perfilUsuario) === 'técnico';
+                            $esTecnicoAdministrador = !empty($perfilUsuario) &&
+                                                     (strtolower($perfilUsuario) === 'técnico administrador' ||
+                                                      strtolower($perfilUsuario) === 'tecnico administrador');
                             $esAsesor = !empty($perfilUsuario) &&
                                        strtolower($perfilUsuario) === 'asesor';
                             $esAdministrador = !empty($perfilUsuario) &&
@@ -50,8 +53,17 @@
                             $tecnicoPuedeEditarSolucion = $esTecnico && !$servicioTerminado;
                             $tecnicoPuedeEditarNota = $esTecnico && !$servicioTerminado;
                             
+                            // Determinar si el técnico administrador puede editar cualquier campo
+                            $tecnicoAdminPuedeEditarCosto = $esTecnicoAdministrador && !$servicioTerminado;
+                            $tecnicoAdminPuedeEditarEstado = $esTecnicoAdministrador && !$servicioTerminado;
+                            $tecnicoAdminPuedeEditarSolucion = $esTecnicoAdministrador && !$servicioTerminado;
+                            $tecnicoAdminPuedeEditarNota = $esTecnicoAdministrador && !$servicioTerminado;
+                            
                             // Verificar si el técnico tiene permiso para cambiar técnico asignado
                             $tecnicoPuedeCambiarTecnico = $esTecnico && !$servicioTerminado && PermisoHelper::tienePermiso('cambiar_tecnico_servicio');
+                            
+                            // Verificar si el técnico administrador tiene permiso para cambiar técnico asignado
+                            $tecnicoAdminPuedeCambiarTecnico = $esTecnicoAdministrador && !$servicioTerminado && PermisoHelper::tienePermiso('cambiar_tecnico_servicio');
                             
                             // Administradores siempre pueden editar todo
                             $administradorPuedeEditarCosto = $esAdministrador;
@@ -89,6 +101,59 @@
                                                     "Técnico Asignado", 
                                                 <?php endif; ?>
                                                 <?php if ($tecnicoPuedeEditarCosto): ?>
+                                                    y "Costo"
+                                                <?php endif; ?>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <?php if ($servicioTerminado): ?>
+                                        <div class="service-info__field">
+                                            <div class="service-info__value">
+                                                <i class="fas fa-lock service-info__icon"></i>
+                                                <span>El servicio está terminado. Solo un administrador puede modificar cualquier campo del servicio.</span>
+                                            </div>
+                                        </div>
+                                        <?php else: ?>
+                                        <div class="service-info__field">
+                                            <div class="service-info__value">
+                                                <i class="fas fa-lock service-info__icon"></i>
+                                                <span>Los demás campos están bloqueados para mantener la integridad del servicio</span>
+                                            </div>
+                                        </div>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </div>
+                            <?php endif; ?>
+
+                            <?php if ($esTecnicoAdministrador): ?>
+                            <!-- Mensaje informativo para técnicos administradores -->
+                            <div class="service-info-card service-info-card--info">
+                                <div class="service-info-card__header">
+                                    <h4 class="service-info-card__title">
+                                        <i class="fas fa-info-circle service-info-card__icon"></i>
+                                        Información para Técnicos Administradores
+                                    </h4>
+                                </div>
+                                <div class="service-info-card__body">
+                                    <div class="service-info-grid">
+                                        <div class="service-info__field">
+                                            <div class="service-info__value">
+                                                <i class="fas fa-edit service-info__icon"></i>
+                                                <span>Como técnico administrador, puedes editar: 
+                                                <?php if ($tecnicoAdminPuedeEditarEstado): ?>
+                                                    "Estado", 
+                                                <?php endif; ?>
+                                                <?php if ($tecnicoAdminPuedeEditarSolucion): ?>
+                                                    "Solución Aplicada", 
+                                                <?php endif; ?>
+                                                <?php if ($tecnicoAdminPuedeEditarNota): ?>
+                                                    "Nota Interna", 
+                                                <?php endif; ?>
+                                                <?php if ($tecnicoAdminPuedeCambiarTecnico): ?>
+                                                    "Técnico Asignado", 
+                                                <?php endif; ?>
+                                                <?php if ($tecnicoAdminPuedeEditarCosto): ?>
                                                     y "Costo"
                                                 <?php endif; ?>
                                                 </span>
@@ -167,6 +232,17 @@
                                     <input type="hidden" name="IdTipoServicio" value="<?= htmlspecialchars($servicio['IdTipoServicio'] ?? '') ?>">
                                     <input type="hidden" name="condicionesentrega" value="<?= htmlspecialchars($servicio['CondicionesEntrega'] ?? '') ?>">
                                     <input type="hidden" name="problema" value="<?= htmlspecialchars($servicio['Problema'] ?? '') ?>">
+                                <?php elseif ($esTecnicoAdministrador && !$servicioTerminado): ?>
+                                    <!-- Técnico Administrador con servicio no terminado: solo campos editables no son hidden -->
+                                    <input type="hidden" name="idcliente" value="<?= htmlspecialchars($servicio['NoIdentificacionCliente'] ?? '') ?>">
+                                    <?php if (!$tecnicoAdminPuedeCambiarTecnico): ?>
+                                        <!-- Solo ocultar técnico si no tiene permiso para cambiarlo -->
+                                        <input type="hidden" name="NoIdentificacionEmpleado" value="<?= htmlspecialchars($servicio['NoIdentificacionEmpleado'] ?? '') ?>">
+                                    <?php endif; ?>
+                                    <input type="hidden" name="equipo" value="<?= htmlspecialchars($servicio['Equipo'] ?? '') ?>">
+                                    <input type="hidden" name="IdTipoServicio" value="<?= htmlspecialchars($servicio['IdTipoServicio'] ?? '') ?>">
+                                    <input type="hidden" name="condicionesentrega" value="<?= htmlspecialchars($servicio['CondicionesEntrega'] ?? '') ?>">
+                                    <input type="hidden" name="problema" value="<?= htmlspecialchars($servicio['Problema'] ?? '') ?>">
                                 <?php endif; ?>
 
                                 <?php if ($esAsesor): ?>
@@ -221,7 +297,7 @@
                                     <div class="service-info__input">
                                         <i class="fas fa-user-cog service-info__icon"></i>
                                         <select class="form__control" id="NoIdentificacionEmpleado" name="NoIdentificacionEmpleado"
-                                                <?= (($esTecnico && !$tecnicoPuedeCambiarTecnico) || $esAsesor) ? 'disabled' : '' ?>>
+                                                <?= ((($esTecnico && !$tecnicoPuedeCambiarTecnico) || ($esTecnicoAdministrador && !$tecnicoAdminPuedeCambiarTecnico)) || $esAsesor) ? 'disabled' : '' ?>>
                                             <option value="">Seleccionar técnico</option>
                                             <?php if (!empty($tecnicos)): ?>
                                                 <?php foreach ($tecnicos as $tecnico): ?>
@@ -235,7 +311,7 @@
                                         </select>
                                     </div>
                                     <div class="form__feedback form__feedback--invalid" id="error-NoIdentificacionEmpleado"></div>
-                                    <?php if ($tecnicoPuedeCambiarTecnico): ?>
+                                    <?php if ($tecnicoPuedeCambiarTecnico || $tecnicoAdminPuedeCambiarTecnico): ?>
                                         <div class="form__feedback form__feedback--info">
                                             <i class="fas fa-info-circle"></i>
                                             <span>Tienes permiso para cambiar el técnico asignado a este servicio.</span>
@@ -253,7 +329,7 @@
                                         <input type="text" class="form__control" id="equipo" name="equipo"
                                             value="<?= htmlspecialchars($servicio['Equipo'] ?? '') ?>"
                                             placeholder="Ej: Laptop HP, iPhone 12, etc."
-                                            <?= ($esTecnico || $esAsesor) ? 'disabled' : '' ?> required>
+                                            <?= ($esTecnico || $esTecnicoAdministrador || $esAsesor) ? 'disabled' : '' ?> required>
                                     </div>
                                     <div class="form__feedback form__feedback--invalid" id="error-equipo"></div>
                                 </div>
@@ -266,7 +342,7 @@
                                     <div class="service-info__input">
                                         <i class="fas fa-tools service-info__icon"></i>
                                         <select class="form__control" id="IdTipoServicio" name="IdTipoServicio"
-                                                <?= ($esTecnico || $esAsesor) ? 'disabled' : '' ?> required>
+                                                <?= ($esTecnico || $esTecnicoAdministrador || $esAsesor) ? 'disabled' : '' ?> required>
                                             <option value="">Seleccionar tipo</option>
                                             <?php foreach ($tiposServicio as $tipo): ?>
                                                 <option value="<?= $tipo['id'] ?>"
@@ -302,7 +378,7 @@
                                         <input type="number" class="form__control" id="costo" name="costo"
                                             value="<?= htmlspecialchars($servicio['Costo'] ?? '') ?>"
                                             placeholder="0" min="0" step="1000"
-                                            <?= ($esAsesor || ($esTecnico && !$tecnicoPuedeEditarCosto)) ? 'disabled' : '' ?>>
+                                            <?= ($esAsesor || (($esTecnico && !$tecnicoPuedeEditarCosto) || ($esTecnicoAdministrador && !$tecnicoAdminPuedeEditarCosto))) ? 'disabled' : '' ?>>
                                     </div>
                                     <div class="form__feedback form__feedback--invalid" id="error-costo"></div>
                                 </div>
@@ -315,7 +391,7 @@
                                     <div class="service-info__input">
                                         <i class="fas fa-exchange-alt service-info__icon"></i>
                                         <select class="form__control" id="IdEstadoEnTaller" name="IdEstadoEnTaller"
-                                                <?= ($esAsesor || ($esTecnico && !$tecnicoPuedeEditarEstado)) ? 'disabled' : '' ?> required>
+                                                <?= ($esAsesor || (($esTecnico && !$tecnicoPuedeEditarEstado) || ($esTecnicoAdministrador && !$tecnicoAdminPuedeEditarEstado))) ? 'disabled' : '' ?> required>
                                             <?php foreach ($estados as $estado): ?>
                                                 <option value="<?= $estado['id'] ?>" <?= $estado['id'] == $servicio['IdEstadoEnTaller'] ? 'selected' : '' ?>>
                                                     <?= htmlspecialchars($estado['descripcion']) ?>
@@ -335,7 +411,7 @@
                                         <i class="fas fa-clipboard-list service-info__icon"></i>
                                         <textarea class="form__control" id="condicionesentrega" name="condicionesentrega" rows="3"
                                             placeholder="Condiciones especiales de entrega del equipo..."
-                                            <?= ($esTecnico || $esAsesor) ? 'disabled' : '' ?>><?= htmlspecialchars($servicio['CondicionesEntrega'] ?? '') ?></textarea>
+                                            <?= ($esTecnico || $esTecnicoAdministrador || $esAsesor) ? 'disabled' : '' ?>><?= htmlspecialchars($servicio['CondicionesEntrega'] ?? '') ?></textarea>
                                     </div>
                                     <div class="form__feedback form__feedback--invalid" id="error-condicionesentrega"></div>
                                 </div>
@@ -349,7 +425,7 @@
                                         <i class="fas fa-exclamation-triangle service-info__icon"></i>
                                         <textarea class="form__control" id="problema" name="problema" rows="3"
                                             placeholder="Describe el problema del equipo..."
-                                            <?= ($esTecnico || $esAsesor) ? 'disabled' : '' ?> required><?= htmlspecialchars($servicio['Problema'] ?? '') ?></textarea>
+                                            <?= ($esTecnico || $esTecnicoAdministrador || $esAsesor) ? 'disabled' : '' ?> required><?= htmlspecialchars($servicio['Problema'] ?? '') ?></textarea>
                                     </div>
                                     <div class="form__feedback form__feedback--invalid" id="error-problema"></div>
                                 </div>
@@ -363,7 +439,7 @@
                                         <i class="fas fa-tools service-info__icon"></i>
                                         <textarea class="form__control" id="solucion" name="solucion" rows="4"
                                             placeholder="Describe la solución aplicada al problema..."
-                                            <?= ($esAsesor || ($esTecnico && !$tecnicoPuedeEditarSolucion)) ? 'disabled' : '' ?>><?= htmlspecialchars($servicio['Solucion'] ?? '') ?></textarea>
+                                            <?= ($esAsesor || (($esTecnico && !$tecnicoPuedeEditarSolucion) || ($esTecnicoAdministrador && !$tecnicoAdminPuedeEditarSolucion))) ? 'disabled' : '' ?>><?= htmlspecialchars($servicio['Solucion'] ?? '') ?></textarea>
                                     </div>
                                     <div class="form__feedback form__feedback--invalid" id="error-solucion"></div>
                                 </div>
@@ -377,7 +453,7 @@
                                         <i class="fas fa-sticky-note service-info__icon"></i>
                                         <textarea class="form__control" id="notainterna" name="notainterna" rows="3"
                                             placeholder="Notas internas para el equipo técnico (no visible para el cliente)..."
-                                            <?= ($esAsesor || ($esTecnico && !$tecnicoPuedeEditarNota)) ? 'disabled' : '' ?>><?= htmlspecialchars($servicio['NotaInterna'] ?? '') ?></textarea>
+                                            <?= ($esAsesor || (($esTecnico && !$tecnicoPuedeEditarNota) || ($esTecnicoAdministrador && !$tecnicoAdminPuedeEditarNota))) ? 'disabled' : '' ?>><?= htmlspecialchars($servicio['NotaInterna'] ?? '') ?></textarea>
                                     </div>
                                     <div class="form__feedback form__feedback--invalid" id="error-notainterna"></div>
                                 </div>

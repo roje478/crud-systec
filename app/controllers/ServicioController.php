@@ -17,6 +17,11 @@ class ServicioController extends BaseController {
                    (strtolower(trim($perfilNombre)) === 'técnico' || 
                     strtolower(trim($perfilNombre)) === 'tecnico');
 
+        // Verificar si el usuario es técnico administrador
+        $esTecnicoAdministrador = !empty($perfilNombre) && 
+                                (strtolower(trim($perfilNombre)) === 'técnico administrador' || 
+                                 strtolower(trim($perfilNombre)) === 'tecnico administrador');
+
         // Verificar si el usuario es asesor
         $esAsesor = !empty($perfilNombre) && 
                    strtolower(trim($perfilNombre)) === 'asesor';
@@ -39,7 +44,7 @@ class ServicioController extends BaseController {
         $estados = $this->servicioModel->getEstados();
 
         // Renderizar vista con los datos
-        $this->render('servicios/index', compact('servicios', 'estados', 'esTecnico', 'esAsesor'));
+        $this->render('servicios/index', compact('servicios', 'estados', 'esTecnico', 'esTecnicoAdministrador', 'esAsesor'));
     }
 
     // Lista completa de servicios - TODOS los servicios sin límite con paginación de DataTables
@@ -87,6 +92,11 @@ class ServicioController extends BaseController {
                    (strtolower(trim($perfilNombre)) === 'técnico' || 
                     strtolower(trim($perfilNombre)) === 'tecnico');
 
+        // Verificar si el usuario es técnico administrador
+        $esTecnicoAdministrador = !empty($perfilNombre) && 
+                                (strtolower(trim($perfilNombre)) === 'técnico administrador' || 
+                                 strtolower(trim($perfilNombre)) === 'tecnico administrador');
+
         // Verificar si el usuario es asesor
         $esAsesor = !empty($perfilNombre) && 
                    strtolower(trim($perfilNombre)) === 'asesor';
@@ -98,7 +108,7 @@ class ServicioController extends BaseController {
         $servicios = [];
 
         // Usar la vista mejorada en lugar de la original
-        $this->render('servicios/buscar_mejorada', compact('servicios', 'estados', 'esTecnico', 'esAsesor'));
+        $this->render('servicios/buscar_mejorada', compact('servicios', 'estados', 'esTecnico', 'esTecnicoAdministrador', 'esAsesor'));
     }
 
     // Mostrar vista de búsqueda simplificada para diagnóstico
@@ -130,6 +140,11 @@ class ServicioController extends BaseController {
                    (strtolower(trim($perfilNombre)) === 'técnico' || 
                     strtolower(trim($perfilNombre)) === 'tecnico');
 
+        // Verificar si el usuario es técnico administrador
+        $esTecnicoAdministrador = !empty($perfilNombre) && 
+                                (strtolower(trim($perfilNombre)) === 'técnico administrador' || 
+                                 strtolower(trim($perfilNombre)) === 'tecnico administrador');
+
         // Verificar si el usuario es asesor
         $esAsesor = !empty($perfilNombre) && 
                    strtolower(trim($perfilNombre)) === 'asesor';
@@ -140,7 +155,7 @@ class ServicioController extends BaseController {
         // Inicializar array vacío de servicios (se llenará con búsqueda)
         $servicios = [];
 
-        $this->render('servicios/buscar_mejorada', compact('servicios', 'estados', 'esTecnico', 'esAsesor'));
+        $this->render('servicios/buscar_mejorada', compact('servicios', 'estados', 'esTecnico', 'esTecnicoAdministrador', 'esAsesor'));
     }
 
     // Mostrar formulario de creación
@@ -216,6 +231,11 @@ class ServicioController extends BaseController {
                    (strtolower(trim($perfilNombre)) === 'técnico' || 
                     strtolower(trim($perfilNombre)) === 'tecnico');
 
+        // Verificar si el usuario es técnico administrador
+        $esTecnicoAdministrador = !empty($perfilNombre) && 
+                                (strtolower(trim($perfilNombre)) === 'técnico administrador' || 
+                                 strtolower(trim($perfilNombre)) === 'tecnico administrador');
+
         // Verificar si el usuario es asesor
         $esAsesor = !empty($perfilNombre) && 
                    strtolower(trim($perfilNombre)) === 'asesor';
@@ -225,6 +245,7 @@ class ServicioController extends BaseController {
         error_log("DEBUG ServicioController::view() - esTecnico: " . ($esTecnico ? 'true' : 'false'));
         error_log("DEBUG ServicioController::view() - esAsesor: " . ($esAsesor ? 'true' : 'false'));
         error_log("DEBUG ServicioController::view() - servicio estado: " . $servicio['IdEstadoEnTaller']);
+        error_log("DEBUG ServicioController::view() - esTecnicoAdministrador: " . ($esTecnicoAdministrador ? 'true' : 'false'));
 
         if ($esTecnico) {
             $tecnicoId = $_SESSION['usuario_id'] ?? null;
@@ -237,7 +258,7 @@ class ServicioController extends BaseController {
         // Obtener estados disponibles para el dropdown
         $estados = $this->servicioModel->getEstados();
 
-        $this->render('servicios/view', compact('servicio', 'estados', 'esTecnico', 'esAsesor'));
+        $this->render('servicios/view', compact('servicio', 'estados', 'esTecnico', 'esTecnicoAdministrador', 'esAsesor'));
     }
 
     // Mostrar formulario de edición
@@ -288,15 +309,28 @@ class ServicioController extends BaseController {
         $esTecnico = !empty($perfilNombre) && 
                    (strtolower(trim($perfilNombre)) === 'técnico' || 
                     strtolower(trim($perfilNombre)) === 'tecnico');
+        $esTecnicoAdministrador = !empty($perfilNombre) && 
+                                (strtolower(trim($perfilNombre)) === 'técnico administrador' || 
+                                 strtolower(trim($perfilNombre)) === 'tecnico administrador');
         
         $servicioTerminado = isset($servicioActual['IdEstadoEnTaller']) && $servicioActual['IdEstadoEnTaller'] == 3;
         $tecnicoPuedeCambiarTecnico = $esTecnico && !$servicioTerminado && PermisoHelper::tienePermiso('cambiar_tecnico_servicio');
+        $tecnicoAdminPuedeCambiarTecnico = $esTecnicoAdministrador && !$servicioTerminado && PermisoHelper::tienePermiso('cambiar_tecnico_servicio');
         
         // Si el técnico está intentando cambiar el técnico asignado, verificar permisos
         if ($esTecnico && isset($data['NoIdentificacionEmpleado']) && 
             $data['NoIdentificacionEmpleado'] != $servicioActual['NoIdentificacionEmpleado']) {
             
             if (!$tecnicoPuedeCambiarTecnico) {
+                $this->json(['success' => false, 'message' => 'No tienes permisos para cambiar el técnico asignado'], 403);
+            }
+        }
+        
+        // Si el técnico administrador está intentando cambiar el técnico asignado, verificar permisos
+        if ($esTecnicoAdministrador && isset($data['NoIdentificacionEmpleado']) && 
+            $data['NoIdentificacionEmpleado'] != $servicioActual['NoIdentificacionEmpleado']) {
+            
+            if (!$tecnicoAdminPuedeCambiarTecnico) {
                 $this->json(['success' => false, 'message' => 'No tienes permisos para cambiar el técnico asignado'], 403);
             }
         }

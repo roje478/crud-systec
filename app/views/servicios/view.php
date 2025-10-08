@@ -2,22 +2,23 @@
         // Verificar que las variables estén definidas
         $esTecnico = $esTecnico ?? false;
         $esAsesor = $esAsesor ?? false;
+        $esTecnicoAdministrador = $esTecnicoAdministrador ?? false;
         ?>
 
         <div class="service-detail">
 
-            <?php if ($esAsesor): ?>
-            <!-- Mensaje informativo para asesores -->
-            <div class="alert alert-warning mb-4">
-                <div class="d-flex align-items-center">
-                    <i class="fas fa-user-tie me-3 fa-2x"></i>
-                    <div>
-                        <h5 class="alert-heading mb-1">Vista de Asesor</h5>
-                        <p class="mb-0">Como asesor, puedes ver y editar servicios, pero no cambiar su estado.</p>
-                    </div>
+        <?php if ($esAsesor): ?>
+        <!-- Mensaje informativo para asesores -->
+        <div class="alert alert-warning mb-4">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-user-tie me-3 fa-2x"></i>
+                <div>
+                    <h5 class="alert-heading mb-1">Vista de Asesor</h5>
+                    <p class="mb-0">Como asesor, puedes ver y editar servicios, pero no cambiar su estado.</p>
                 </div>
             </div>
-            <?php endif; ?>
+        </div>
+        <?php endif; ?>
 
             <!-- Información principal -->
             <div class="service-detail__content">
@@ -70,13 +71,23 @@
                                 <div class="service-detail__header-actions">
                                     <?php 
                                     // Mostrar botón de cambiar estado solo si:
-                                    // 1. No es asesor Y no es técnico (usuarios admin, etc.) - SIEMPRE pueden cambiar estado
+                                    // 1. No es asesor Y no es técnico Y no es técnico administrador (usuarios admin, etc.) - SIEMPRE pueden cambiar estado
                                     // 2. Es técnico PERO el servicio NO está terminado (ID != 3) - técnicos NO pueden cambiar estado si está terminado
-                                    $mostrarCambiarEstado = (!$esAsesor && !$esTecnico) || 
-                                                          ($esTecnico && $servicio['IdEstadoEnTaller'] != 3);
+                                    // 3. Es técnico administrador PERO el servicio NO está terminado (ID != 3) - técnicos admin NO pueden cambiar estado si está terminado
+                                    $mostrarCambiarEstado = (!$esAsesor && !$esTecnico && !$esTecnicoAdministrador) || 
+                                                          ($esTecnico && $servicio['IdEstadoEnTaller'] != 3) ||
+                                                          ($esTecnicoAdministrador && $servicio['IdEstadoEnTaller'] != 3);
+                                    
+                                    // Mostrar botón de editar solo si:
+                                    // 1. No es asesor Y no es técnico Y no es técnico administrador (usuarios admin, etc.) - SIEMPRE pueden editar
+                                    // 2. Es técnico PERO el servicio NO está terminado (ID != 3) - técnicos NO pueden editar si está terminado
+                                    // 3. Es técnico administrador PERO el servicio NO está terminado (ID != 3) - técnicos admin NO pueden editar si está terminado
+                                    $mostrarEditar = (!$esAsesor && !$esTecnico && !$esTecnicoAdministrador) || 
+                                                   ($esTecnico && $servicio['IdEstadoEnTaller'] != 3) ||
+                                                   ($esTecnicoAdministrador && $servicio['IdEstadoEnTaller'] != 3);
                                     
                                     // Debug temporal - REMOVER DESPUÉS
-                                    echo "<!-- DEBUG: esTecnico=" . ($esTecnico ? 'true' : 'false') . ", esAsesor=" . ($esAsesor ? 'true' : 'false') . ", estadoId=" . $servicio['IdEstadoEnTaller'] . ", mostrarCambiarEstado=" . ($mostrarCambiarEstado ? 'true' : 'false') . " -->";
+                                    echo "<!-- DEBUG: esTecnico=" . ($esTecnico ? 'true' : 'false') . ", esAsesor=" . ($esAsesor ? 'true' : 'false') . ", esTecnicoAdministrador=" . ($esTecnicoAdministrador ? 'true' : 'false') . ", estadoId=" . $servicio['IdEstadoEnTaller'] . ", mostrarCambiarEstado=" . ($mostrarCambiarEstado ? 'true' : 'false') . ", mostrarEditar=" . ($mostrarEditar ? 'true' : 'false') . " -->";
                                     ?>
                                     
                                     <?php if ($mostrarCambiarEstado): ?>
@@ -102,9 +113,13 @@
                                         </ul>
                                     </div>
                                     <?php endif; ?>
+
+                                    <?php if ($mostrarEditar): ?>
                                     <button class="btn btn--outline" onclick="editService(<?= $servicio['IdServicio'] ?>)">
                                         <i class="fas fa-edit btn__icon"></i>Editar
                                     </button>
+                                    <?php endif; ?>
+                                    
                                     <button class="btn btn--outline" onclick="imprimirDirecto(<?= $servicio['IdServicio'] ?>)">
                                         <i class="fas fa-print btn__icon"></i>Imprimir
                                     </button>

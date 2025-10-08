@@ -105,4 +105,11 @@ class AuthMiddleware {
     public static function isAsesor() {
         return self::hasProfile('asesor');
     }
+
+    /**
+     * Verificar si el usuario es técnico administrador
+     */
+    public static function isTecnicoAdministrador() {
+        return self::hasProfile('técnico administrador') || self::hasProfile('tecnico administrador');
+    }
 }
