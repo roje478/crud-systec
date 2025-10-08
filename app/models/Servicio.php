@@ -296,7 +296,7 @@ class Servicio extends BaseModel {
 
 
 
-    // Obtener técnicos/empleados para select
+    // Obtener empleados para asignación de servicios (todos los perfiles excepto asesor)
     public function getTecnicos() {
         $sql = "SELECT
                     u.no_identificacion as NoIdentificacionEmpleado,
@@ -316,12 +316,7 @@ class Servicio extends BaseModel {
                 INNER JOIN perfil p ON u.codigo_perfil = p.codigo_perfil
                 WHERE u.activo = 1
                   AND p.activo = 1
-                  AND (
-                      LOWER(p.descripcion) LIKE '%tecnico%'
-                      OR LOWER(p.descripcion) LIKE '%técnico%'
-                      OR LOWER(p.descripcion) LIKE '%especializado%'
-                      OR p.codigo_perfil IN (2, 8) -- IDs de perfiles de técnico conocidos
-                  )
+                  AND LOWER(p.descripcion) NOT LIKE '%asesor%'
                 ORDER BY c.nombres, c.apellidos";
 
         $stmt = $this->db->prepare($sql);
