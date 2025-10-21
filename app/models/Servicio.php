@@ -462,4 +462,97 @@ class Servicio extends BaseModel {
         $stmt->execute([$tecnicoId, $searchTerm, $searchTerm, $searchTerm, $searchTerm, $searchTerm]);
         return $stmt->fetchAll();
     }
+
+    /**
+     * Consultar servicios con filtros avanzados
+     * Soporta filtrado por múltiples criterios
+     */
+    public function consultarServicios($filtros, $esTecnico = false, $esTecnicoAdministrador = false) {
+        // Construir query base
+        $sql = "SELECT
+                    s.*,
+                    CONCAT(c.nombres, ' ', c.apellidos) as cliente_nombre,
+                    c.no_identificacion as NoIdentificacionCliente,
+                    c.telefono as cliente_telefono,
+                    et.Descripcion as estado_descripcion,
+                    ts.Descripcion as tipo_servicio_nombre,
+                    CONCAT(t.nombres, ' ', t.apellidos) as tecnico_nombre,
+                    t.no_identificacion as tecnico_id
+                FROM servicio s
+                LEFT JOIN cliente c ON s.NoIdentificacionCliente = c.no_identificacion
+                LEFT JOIN estadoentaller et ON s.IdEstadoEnTaller = et.IdEstadoEnTaller
+                LEFT JOIN tiposervicio ts ON s.IdTipoServicio = ts.IdTipoServicio
+                LEFT JOIN cliente t ON s.NoIdentificacionEmpleado = t.no_identificacion
+                WHERE 1=1";
+
+        $params = [];
+
+        // Si es técnico, solo mostrar sus servicios asignados
+        if ($esTecnico || $esTecnicoAdministrador) {
+            $tecnicoId = $_SESSION['usuario_id'] ?? null;
+            if ($tecnicoId) {
+                $sql .= " AND s.NoIdentificacionEmpleado = ?";
+                $params[] = $tecnicoId;
+            }
+        }
+
+        // Aplicar filtros
+        if (!empty($filtros['servicio_id'])) {
+            $sql .= " AND s.IdServicio = ?";
+            $params[] = $filtros['servicio_id'];
+        }
+
+        if (!empty($filtros['cliente_id'])) {
+            $sql .= " AND s.NoIdentificacionCliente = ?";
+            $params[] = $filtros['cliente_id'];
+        }
+
+        if (!empty($filtros['cliente_nombre'])) {
+            $sql .= " AND CONCAT(c.nombres, ' ', c.apellidos) LIKE ?";
+            $params[] = "%{$filtros['cliente_nombre']}%";
+        }
+
+        if (!empty($filtros['fecha_desde'])) {
+            $sql .= " AND DATE(s.FechaIngreso) >= ?";
+            $params[] = $filtros['fecha_desde'];
+        }
+
+        if (!empty($filtros['fecha_hasta'])) {
+            $sql .= " AND DATE(s.FechaIngreso) <= ?";
+            $params[] = $filtros['fecha_hasta'];
+        }
+
+        if (!empty($filtros['tecnico_id']) && !$esTecnico && !$esTecnicoAdministrador) {
+            $sql .= " AND s.NoIdentificacionEmpleado = ?";
+            $params[] = $filtros['tecnico_id'];
+        }
+
+        if (!empty($filtros['estado_id'])) {
+            $sql .= " AND s.IdEstadoEnTaller = ?";
+            $params[] = $filtros['estado_id'];
+        }
+
+        if (!empty($filtros['tipo_servicio_id'])) {
+            $sql .= " AND s.IdTipoServicio = ?";
+            $params[] = $filtros['tipo_servicio_id'];
+        }
+
+        if (!empty($filtros['equipo'])) {
+            $sql .= " AND s.Equipo LIKE ?";
+            $params[] = "%{$filtros['equipo']}%";
+        }
+
+        if (!empty($filtros['problema'])) {
+            $sql .= " AND s.Problema LIKE ?";
+            $params[] = "%{$filtros['problema']}%";
+        }
+
+        // Ordenar por ID descendente
+        $sql .= " ORDER BY s.IdServicio DESC";
+
+        // Ejecutar query
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll();
+    }
 }

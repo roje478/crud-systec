@@ -509,5 +509,243 @@ class ServicioController extends BaseController {
         // Generar PDF
         PdfHelper::generarOrdenServicio($servicio);
     }
+
+    /**
+     * Consulta avanzada de servicios con filtros
+     */
+    public function consultar() {
+        // Verificar si el usuario es técnico
+        $perfilNombre = $_SESSION['usuario_perfil_nombre'] ?? '';
+        $esTecnico = !empty($perfilNombre) && 
+                   (strtolower(trim($perfilNombre)) === 'técnico' || 
+                    strtolower(trim($perfilNombre)) === 'tecnico');
+
+        // Verificar si el usuario es técnico administrador
+        $esTecnicoAdministrador = !empty($perfilNombre) && 
+                                (strtolower(trim($perfilNombre)) === 'técnico administrador' || 
+                                 strtolower(trim($perfilNombre)) === 'tecnico administrador');
+
+        // Verificar si el usuario es asesor
+        $esAsesor = !empty($perfilNombre) && 
+                   strtolower(trim($perfilNombre)) === 'asesor';
+
+        // Obtener datos para los filtros
+        $estados = $this->servicioModel->getEstados();
+        $tecnicos = $this->servicioModel->getTecnicos();
+        $tiposServicio = $this->servicioModel->getTiposServicio();
+
+        // Inicializar variables de filtros
+        $filtros = [
+            'fecha_desde' => $_GET['fecha_desde'] ?? '',
+            'fecha_hasta' => $_GET['fecha_hasta'] ?? '',
+            'tecnico_id' => $_GET['tecnico_id'] ?? '',
+            'cliente_id' => $_GET['cliente_id'] ?? '',
+            'cliente_nombre' => $_GET['cliente_nombre'] ?? '',
+            'estado_id' => $_GET['estado_id'] ?? '',
+            'tipo_servicio_id' => $_GET['tipo_servicio_id'] ?? '',
+            'equipo' => $_GET['equipo'] ?? '',
+            'problema' => $_GET['problema'] ?? '',
+            'servicio_id' => $_GET['servicio_id'] ?? ''
+        ];
+
+        // Obtener resultados de la consulta
+        $servicios = [];
+        $totalServicios = 0;
+        
+        if ($this->tieneFiltrosActivos($filtros)) {
+            $servicios = $this->servicioModel->consultarServicios($filtros, $esTecnico, $esTecnicoAdministrador);
+            $totalServicios = count($servicios);
+        }
+
+        $this->render('servicios/consultar', compact(
+            'servicios', 
+            'estados', 
+            'tecnicos', 
+            'tiposServicio', 
+            'filtros',
+            'totalServicios',
+            'esTecnico', 
+            'esTecnicoAdministrador', 
+            'esAsesor'
+        ));
+    }
+
+    /**
+     * Verificar si hay filtros activos
+     */
+    private function tieneFiltrosActivos($filtros) {
+        foreach ($filtros as $filtro) {
+            if (!empty($filtro)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Exportar resultados de consulta
+     */
+    public function exportarConsulta() {
+        // Verificar si el usuario es técnico
+        $perfilNombre = $_SESSION['usuario_perfil_nombre'] ?? '';
+        $esTecnico = !empty($perfilNombre) && 
+                   (strtolower(trim($perfilNombre)) === 'técnico' || 
+                    strtolower(trim($perfilNombre)) === 'tecnico');
+
+        // Verificar si el usuario es técnico administrador
+        $esTecnicoAdministrador = !empty($perfilNombre) && 
+                                (strtolower(trim($perfilNombre)) === 'técnico administrador' || 
+                                 strtolower(trim($perfilNombre)) === 'tecnico administrador');
+
+        // Obtener filtros de la URL
+        $filtros = [
+            'fecha_desde' => $_GET['fecha_desde'] ?? '',
+            'fecha_hasta' => $_GET['fecha_hasta'] ?? '',
+            'tecnico_id' => $_GET['tecnico_id'] ?? '',
+            'cliente_id' => $_GET['cliente_id'] ?? '',
+            'cliente_nombre' => $_GET['cliente_nombre'] ?? '',
+            'estado_id' => $_GET['estado_id'] ?? '',
+            'tipo_servicio_id' => $_GET['tipo_servicio_id'] ?? '',
+            'equipo' => $_GET['equipo'] ?? '',
+            'problema' => $_GET['problema'] ?? '',
+            'servicio_id' => $_GET['servicio_id'] ?? ''
+        ];
+
+        // Obtener servicios con filtros
+        $servicios = $this->servicioModel->consultarServicios($filtros, $esTecnico, $esTecnicoAdministrador);
+
+        // Configurar headers para descarga
+        $filename = 'consulta_servicios_' . date('Y-m-d_H-i-s') . '.csv';
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Cache-Control: no-cache, must-revalidate');
+        header('Expires: Sat, 26 Jul 1997 05:00:00 GMT');
+
+        // Crear archivo CSV
+        $output = fopen('php://output', 'w');
+        
+        // BOM para UTF-8
+        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+
+        // Encabezados
+        fputcsv($output, [
+            'ID Servicio',
+            'Cliente',
+            'ID Cliente',
+            'Equipo',
+            'Problema',
+            'Estado',
+            'Técnico',
+            'Tipo Servicio',
+            'Fecha Ingreso',
+            'Costo',
+            'Condiciones Entrega',
+            'Solución',
+            'Nota Interna'
+        ]);
+
+        // Datos
+        foreach ($servicios as $servicio) {
+            fputcsv($output, [
+                $servicio['IdServicio'],
+                $servicio['cliente_nombre'] ?? 'N/A',
+                $servicio['NoIdentificacionCliente'] ?? 'N/A',
+                $servicio['Equipo'] ?? 'N/A',
+                $servicio['Problema'] ?? 'N/A',
+                $servicio['estado_descripcion'] ?? 'N/A',
+                $servicio['tecnico_nombre'] ?? 'Sin asignar',
+                $servicio['tipo_servicio_nombre'] ?? 'N/A',
+                DateHelper::extractDateTime($servicio['FechaIngreso']),
+                $servicio['Costo'] ?? '0',
+                $servicio['CondicionesEntrega'] ?? '',
+                $servicio['Solucion'] ?? '',
+                $servicio['NotaInterna'] ?? ''
+            ]);
+        }
+
+        fclose($output);
+        exit;
+    }
+
+    /**
+     * Cargar resultados de consulta via AJAX
+     */
+    public function cargarResultados() {
+        // Verificar si el usuario es técnico
+        $perfilNombre = $_SESSION['usuario_perfil_nombre'] ?? '';
+        $esTecnico = !empty($perfilNombre) && 
+                   (strtolower(trim($perfilNombre)) === 'técnico' || 
+                    strtolower(trim($perfilNombre)) === 'tecnico');
+
+        // Verificar si el usuario es técnico administrador
+        $esTecnicoAdministrador = !empty($perfilNombre) && 
+                                (strtolower(trim($perfilNombre)) === 'técnico administrador' || 
+                                 strtolower(trim($perfilNombre)) === 'tecnico administrador');
+
+        // Verificar si el usuario es asesor
+        $esAsesor = !empty($perfilNombre) && 
+                   strtolower(trim($perfilNombre)) === 'asesor';
+
+        // Obtener filtros del POST
+        $filtros = [
+            'fecha_desde' => $_POST['fecha_desde'] ?? '',
+            'fecha_hasta' => $_POST['fecha_hasta'] ?? '',
+            'tecnico_id' => $_POST['tecnico_id'] ?? '',
+            'cliente_id' => $_POST['cliente_id'] ?? '',
+            'cliente_nombre' => $_POST['cliente_nombre'] ?? '',
+            'estado_id' => $_POST['estado_id'] ?? '',
+            'tipo_servicio_id' => $_POST['tipo_servicio_id'] ?? '',
+            'equipo' => $_POST['equipo'] ?? '',
+            'problema' => $_POST['problema'] ?? '',
+            'servicio_id' => $_POST['servicio_id'] ?? ''
+        ];
+
+        // Validar ID del servicio si se proporciona
+        if (!empty($filtros['servicio_id'])) {
+            if (!is_numeric($filtros['servicio_id']) || $filtros['servicio_id'] < 1) {
+                $this->json([
+                    'success' => false,
+                    'message' => 'El ID del servicio debe ser un número válido mayor a 0'
+                ], 400);
+                return;
+            }
+        }
+
+        // Validar nombre del cliente si se proporciona
+        if (!empty($filtros['cliente_nombre'])) {
+            if (strlen(trim($filtros['cliente_nombre'])) < 2) {
+                $this->json([
+                    'success' => false,
+                    'message' => 'El nombre del cliente debe tener al menos 2 caracteres'
+                ], 400);
+                return;
+            }
+        }
+
+        try {
+            // Obtener servicios con filtros
+            $servicios = $this->servicioModel->consultarServicios($filtros, $esTecnico, $esTecnicoAdministrador);
+            $totalServicios = count($servicios);
+
+            // Preparar respuesta
+            $response = [
+                'success' => true,
+                'servicios' => $servicios,
+                'total' => $totalServicios,
+                'filtros' => $filtros,
+                'esTecnico' => $esTecnico,
+                'esTecnicoAdministrador' => $esTecnicoAdministrador,
+                'esAsesor' => $esAsesor
+            ];
+
+            $this->json($response);
+
+        } catch (Exception $e) {
+            $this->json([
+                'success' => false,
+                'message' => 'Error al cargar los resultados: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
 ?>
