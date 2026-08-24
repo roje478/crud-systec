@@ -756,13 +756,6 @@ $esAsesor = $esAsesor ?? false;
         // Crear URL de exportación
         const url = '<?= url('servicios/exportar-consulta') ?>?' + filtros + columnasParam;
 
-        // Mostrar mensaje de depuración
-        console.log('=== EXPORTACIÓN CSV ===');
-        console.log('Columnas seleccionadas:', columnasSeleccionadas);
-        console.log('Parámetro columnas:', columnasParam);
-        console.log('URL completa:', url);
-        alert('Exportando ' + columnasSeleccionadas.length + ' columnas. Revisa la consola (F12) para más detalles.');
-
         // Abrir en nueva ventana
         window.open(url, '_blank');
     }
@@ -784,7 +777,6 @@ $esAsesor = $esAsesor ?? false;
                 columnas.push(val);
             }
         });
-        console.log('Columnas seleccionadas del modal:', columnas);
         return columnas;
     }
     
@@ -800,7 +792,6 @@ $esAsesor = $esAsesor ?? false;
         if (columnas) {
             try {
                 const columnasArray = JSON.parse(columnas);
-                console.log('Columnas cargadas desde localStorage:', columnasArray);
                 // Desmarcar todas primero
                 $('#columnasModal input[type="checkbox"]:not(:disabled)').prop('checked', false);
                 // Marcar las guardadas
@@ -813,7 +804,6 @@ $esAsesor = $esAsesor ?? false;
                 $('#columnasModal input[type="checkbox"]:not(:disabled)').prop('checked', true);
             }
         } else {
-            console.log('No hay columnas guardadas, marcando todas por defecto');
             // Si no hay preferencias guardadas, marcar todas
             $('#columnasModal input[type="checkbox"]:not(:disabled)').prop('checked', true);
         }

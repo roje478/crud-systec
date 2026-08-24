@@ -760,18 +760,11 @@ class ServicioController extends BaseController {
         // Obtener columnas seleccionadas (si no hay, exportar todas)
         $columnasParam = $_GET['columnas'] ?? '';
         
-        // Log detallado para depuración
-        error_log("=== CSV EXPORT DEBUG ===");
-        error_log("GET params: " . print_r($_GET, true));
-        error_log("Columnas recibidas RAW: " . $columnasParam);
-        
         // Si hay columnas especificadas, usarlas; si no, todas por defecto
         if (!empty($columnasParam)) {
             $columnasSeleccionadas = explode(',', $columnasParam);
-            error_log("Columnas parseadas: " . print_r($columnasSeleccionadas, true));
         } else {
             $columnasSeleccionadas = ['0','1','2','3','4','5','6','7','8','9'];
-            error_log("Usando columnas por defecto (todas)");
         }
         
         // Mapeo de índices a nombres de columnas
@@ -811,14 +804,8 @@ class ServicioController extends BaseController {
             $colIndex = trim($colIndex); // Limpiar espacios
             if (isset($columnasDisponibles[$colIndex])) {
                 $headers[] = $columnasDisponibles[$colIndex]['header'];
-                error_log("Agregando columna: $colIndex -> " . $columnasDisponibles[$colIndex]['header']);
-            } else {
-                error_log("Columna no encontrada: [$colIndex]");
             }
         }
-        
-        error_log("Headers finales: " . implode(',', $headers));
-        error_log("Total columnas a exportar: " . count($headers));
         
         echo implode(',', $headers) . "\n";
 
