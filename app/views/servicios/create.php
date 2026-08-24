@@ -155,7 +155,7 @@ if (isset($_SESSION['flash_message'])) {
                             </label>
                             <div class="service-info__input">
                                 <i class="fas fa-dollar-sign service-info__icon"></i>
-                                <input type="number" class="form__control" id="costo" name="costo" min="0" step="0.01">
+                                <input type="number" class="form__control" id="costo" name="costo" min="0" step="1">
                             </div>
                         </div>
 

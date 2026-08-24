@@ -403,14 +403,14 @@
 
                                 <!-- Costo -->
                                 <div class="service-info__field">
-                                    <label class="service-info__label" for="costo"></label>
+                                    <label class="service-info__label" for="costo">
                                         Costo
                                     </label>
                                     <div class="service-info__input">
                                         <i class="fas fa-dollar-sign service-info__icon"></i>
                                         <input type="number" class="form__control" id="costo" name="costo"
                                             value="<?= htmlspecialchars($servicio['Costo'] ?? '') ?>"
-                                            placeholder="0" min="0" step="1000"
+                                            placeholder="0" min="0" step="1"
                                             <?= ($esAsesor || (($esTecnico && !$tecnicoPuedeEditarCosto) || ($esTecnicoAdministrador && !$tecnicoAdminPuedeEditarCosto))) ? 'disabled' : '' ?>>
                                     </div>
                                     <div class="form__feedback form__feedback--invalid" id="error-costo"></div>

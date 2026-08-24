@@ -68,7 +68,7 @@
                                        name="CostoAproximado"
                                        placeholder="0"
                                        min="0"
-                                       step="1000">
+                                       step="1">
                             </div>
                             <div class="form__feedback form__feedback--invalid" id="error-CostoAproximado"></div>
                             <div class="form__text">

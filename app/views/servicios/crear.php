@@ -195,9 +195,9 @@ $breadcrumb = [
                                        id="Costo"
                                        name="Costo"
                                        min="0"
-                                       step="0.01"
+                                       step="1"
                                        value="<?= htmlspecialchars($oldData['Costo'] ?? '') ?>"
-                                       placeholder="0.00">
+                                       placeholder="0">
                             </div>
                             <?php if (isset($errors['Costo'])): ?>
                                 <div class="invalid-feedback">
@@ -338,12 +338,5 @@ $(document).ready(function() {
         this.style.height = (this.scrollHeight) + 'px';
     });
 
-    // Formatear campo de costo
-    $('#Costo').on('input', function() {
-        let value = $(this).val();
-        if (value && !isNaN(value)) {
-            $(this).val(parseFloat(value).toFixed(2));
-        }
-    });
 });
 </script>
