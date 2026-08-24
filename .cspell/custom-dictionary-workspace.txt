@@ -1,6 +1,8 @@
 # Custom Dictionary Words
+acceso
 acción
 Acciones
+activo
 actualización
 Actualizando
 actualizar
@@ -8,6 +10,9 @@ adicional
 administrador
 Administrador
 Administradores
+agrega
+agregado
+agregarla
 ahora
 Ajustar
 alternativa
@@ -20,6 +25,7 @@ asesores
 Asesores
 asignacion
 Asignacion
+asignados
 asignar
 automáticamente
 Autorización
@@ -56,6 +62,7 @@ Cláusulas
 cliente
 Cliente
 clientes
+codigo
 Columna
 columnas
 comentada
@@ -68,7 +75,10 @@ Condiciones
 condicionesentrega
 conexión
 Configuración
+configurar
 conoces
+consultar
+Consultar
 Contenido
 Continuar
 contraseña
@@ -170,6 +180,7 @@ Estilos
 Evento
 Eventos
 existan
+existe
 existentes
 éxito
 exitosa
@@ -186,6 +197,7 @@ formulario
 forzar
 Función
 funciona
+funcionalidad
 Funciones
 generar
 Generar
@@ -195,6 +207,8 @@ habido
 habilitado
 Habilitar
 hacer
+haya
+icono
 idcliente
 Identificacion
 Impresion
@@ -256,6 +270,7 @@ oculto
 ocultos
 opcion
 Opcion
+opción
 opciones
 Optimización
 orden
@@ -272,6 +287,7 @@ Parsear
 pasa
 perderán
 perfil
+perfiles
 permanente
 Permanente
 permiso
@@ -340,6 +356,7 @@ tengan
 Terminado
 texto
 tiempo
+tienen
 tipo
 Tipo
 tipos
