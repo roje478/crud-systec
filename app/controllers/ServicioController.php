@@ -258,7 +258,30 @@ class ServicioController extends BaseController {
         // Obtener estados disponibles para el dropdown
         $estados = $this->servicioModel->getEstados();
 
-        $this->render('servicios/view', compact('servicio', 'estados', 'esTecnico', 'esTecnicoAdministrador', 'esAsesor'));
+        // Órdenes a técnicos externos vinculadas a este servicio.
+        // Va protegido: si el módulo de técnicos externos no está instalado en
+        // esta base, el detalle del servicio debe seguir funcionando igual.
+        $ordenesExternas = [];
+        try {
+            // Se consulta el modelo Permiso y NO PermisoHelper: en algunos
+            // despliegues ese helper resuelve los permisos contra la constante
+            // USER_PROFILES de config/auth.php en vez de contra la base.
+            $usuarioActualId = $_SESSION['usuario_id'] ?? null;
+
+            if ($usuarioActualId) {
+                $permisoModel = new Permiso();
+
+                if ($permisoModel->tienePermiso($usuarioActualId, 'TE01')) {
+                    $ordenExternaModel = new OrdenExterna();
+                    $ordenesExternas = $ordenExternaModel->getByServicio($id);
+                }
+            }
+        } catch (Throwable $e) {
+            error_log('ServicioController::view() - órdenes externas no disponibles: ' . $e->getMessage());
+            $ordenesExternas = [];
+        }
+
+        $this->render('servicios/view', compact('servicio', 'estados', 'esTecnico', 'esTecnicoAdministrador', 'esAsesor', 'ordenesExternas'));
     }
 
     // Mostrar formulario de edición

@@ -267,6 +267,16 @@ class RouterPrincipal {
                     $controllerInstance->editTipoServicio($param);
                 } elseif ($action === 'delete-tipo-servicio' && $param && $method === 'POST') {
                     $controllerInstance->deleteTipoServicio($param);
+                } elseif ($action === 'motivos-externos') {
+                    $controllerInstance->motivosExternos();
+                } elseif ($action === 'create-motivo-externo') {
+                    $controllerInstance->createMotivoExterno();
+                } elseif ($action === 'edit-motivo-externo' && $param) {
+                    $controllerInstance->editMotivoExterno($param);
+                } elseif ($action === 'delete-motivo-externo' && $param && $method === 'POST') {
+                    $controllerInstance->deleteMotivoExterno($param);
+                } elseif ($action === 'toggle-motivo-externo' && $param && $method === 'POST') {
+                    $controllerInstance->toggleMotivoExterno($param);
                 } elseif ($action === 'create-defaults' && $method === 'POST') {
                     $controllerInstance->createDefaults();
                 } else {
@@ -380,6 +390,80 @@ class RouterPrincipal {
                     $controllerInstance->reordenar();
                 } elseif ($action === 'get-por-tipo' && $param && $method === 'GET') {
                     $controllerInstance->getPorTipo($param);
+                } else {
+                    $this->handle404("Acción '$action' no encontrada");
+                }
+            }
+            // Manejar tecnicos externos (catalogo)
+            elseif ($controller === 'tecnicos-externos') {
+                if (!class_exists('TecnicoExternoController')) {
+                    throw new Exception('TecnicoExternoController no encontrado');
+                }
+
+                $controllerInstance = new TecnicoExternoController();
+
+                if ($action === 'index' || empty($action)) {
+                    $controllerInstance->index();
+                } elseif ($action === 'create') {
+                    $controllerInstance->create();
+                } elseif ($action === 'store' && $method === 'POST') {
+                    $controllerInstance->store();
+                } elseif ($action === 'store-ajax' && $method === 'POST') {
+                    $controllerInstance->storeAjax();
+                } elseif ($action === 'view' && $param) {
+                    $controllerInstance->view($param);
+                } elseif ($action === 'edit' && $param) {
+                    if ($method === 'POST') {
+                        $controllerInstance->update($param);
+                    } else {
+                        $controllerInstance->edit($param);
+                    }
+                } elseif ($action === 'update' && $param && $method === 'POST') {
+                    $controllerInstance->update($param);
+                } elseif ($action === 'toggle-estado' && $param && $method === 'POST') {
+                    $controllerInstance->toggleEstado($param);
+                } elseif ($action === 'delete' && $param && $method === 'POST') {
+                    $controllerInstance->delete($param);
+                } elseif ($action === 'buscar' && $method === 'GET') {
+                    $controllerInstance->buscar();
+                } else {
+                    $this->handle404("Acción '$action' no encontrada");
+                }
+            }
+            // Manejar ordenes a tecnicos externos
+            elseif ($controller === 'ordenes-externas') {
+                if (!class_exists('OrdenExternaController')) {
+                    throw new Exception('OrdenExternaController no encontrado');
+                }
+
+                $controllerInstance = new OrdenExternaController();
+
+                if ($action === 'index' || empty($action)) {
+                    $controllerInstance->index();
+                } elseif ($action === 'create') {
+                    $controllerInstance->create();
+                } elseif ($action === 'store' && $method === 'POST') {
+                    $controllerInstance->store();
+                } elseif ($action === 'view' && $param) {
+                    $controllerInstance->view($param);
+                } elseif ($action === 'edit' && $param) {
+                    if ($method === 'POST') {
+                        $controllerInstance->update($param);
+                    } else {
+                        $controllerInstance->edit($param);
+                    }
+                } elseif ($action === 'update' && $param && $method === 'POST') {
+                    $controllerInstance->update($param);
+                } elseif ($action === 'recibir' && $param && $method === 'POST') {
+                    $controllerInstance->recibir($param);
+                } elseif ($action === 'anular' && $param && $method === 'POST') {
+                    $controllerInstance->anular($param);
+                } elseif ($action === 'delete' && $param && $method === 'POST') {
+                    $controllerInstance->delete($param);
+                } elseif ($action === 'imprimir' && $param) {
+                    $controllerInstance->imprimir($param);
+                } elseif ($action === 'exportar' && $method === 'GET') {
+                    $controllerInstance->exportar();
                 } else {
                     $this->handle404("Acción '$action' no encontrada");
                 }

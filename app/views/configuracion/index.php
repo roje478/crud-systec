@@ -73,6 +73,36 @@
                 </div>
             </div>
         </div>
+
+        <!-- Motivos de Orden Externa -->
+        <div class="col-xl-6 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Técnicos Externos
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                Motivos de orden externa
+                            </div>
+                            <p class="text-muted small mt-2">
+                                Configura los motivos (reparación, garantía, revisión...) con los que se
+                                entregan productos a técnicos externos
+                            </p>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-tags fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <a href="<?= url('configuracion/motivos-externos') ?>" class="btn btn-info btn-sm text-white">
+                            <i class="fas fa-cog"></i> Gestionar Motivos
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Acciones rápidas -->

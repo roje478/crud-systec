@@ -249,6 +249,119 @@
                             </div>
                         </div>
                     <?php endif; ?>
+
+                    <!-- Órdenes a técnicos externos vinculadas a este servicio -->
+                    <?php
+                    $ordenesExternas = $ordenesExternas ?? [];
+
+                    if (!empty($ordenesExternas)):
+                        $minOE = function ($texto) {
+                            return mb_strtolower(trim((string)$texto), 'UTF-8');
+                        };
+                        $primerNombreOE = function ($texto) use ($minOE) {
+                            $partes = preg_split('/\s+/', trim((string)$texto), -1, PREG_SPLIT_NO_EMPTY);
+                            return $minOE($partes[0] ?? '');
+                        };
+                        $claseEstadoOE = [
+                            'entregado' => 'status-badge--warning',
+                            'recibido'  => 'status-badge--success',
+                            'anulado'   => 'status-badge--danger'
+                        ];
+                        $etiquetaEstadoOE = [
+                            'entregado' => 'entregado',
+                            'recibido'  => 'recibido',
+                            'anulado'   => 'anulado'
+                        ];
+                    ?>
+                        <div class="service-content-card">
+                            <div class="service-content-card__header">
+                                <h6 class="service-content-card__title">
+                                    <i class="fas fa-truck"></i>
+                                    Órdenes a Técnicos Externos (<?= count($ordenesExternas) ?>)
+                                </h6>
+                            </div>
+                            <div class="service-content-card__body" style="padding: 0;">
+                                <div style="overflow-x: auto;">
+                                    <table class="table table-striped table-hover" id="ordenesExternasServicio">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>Cód. Orden</th>
+                                                <th>Fecha</th>
+                                                <th>Técnico Externo</th>
+                                                <th>Empresa</th>
+                                                <th>Detalle del Producto</th>
+                                                <th>Motivo</th>
+                                                <th>Entrega</th>
+                                                <th>Recibe</th>
+                                                <th class="text-right">Precio</th>
+                                                <th class="text-center">Estado</th>
+                                                <th class="text-center">Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($ordenesExternas as $ordenExt): ?>
+                                            <tr>
+                                                <td>
+                                                    <a href="<?= url('ordenes-externas/view/' . $ordenExt['IdOrden']) ?>" class="btn--link">
+                                                        <strong><?= htmlspecialchars($ordenExt['CodOrden']) ?></strong>
+                                                    </a>
+                                                </td>
+                                                <td class="text-nowrap"><?= date('d/m/Y', strtotime($ordenExt['Fecha'])) ?></td>
+                                                <td>
+                                                    <a href="<?= url('tecnicos-externos/view/' . $ordenExt['IdTecnicoExterno']) ?>"
+                                                       class="btn--link" title="<?= htmlspecialchars($ordenExt['tecnico_nombre']) ?>">
+                                                        <?= htmlspecialchars($primerNombreOE($ordenExt['tecnico_nombre'])) ?>
+                                                    </a>
+                                                </td>
+                                                <td>
+                                                    <?php if (!empty($ordenExt['tecnico_taller'])): ?>
+                                                        <?= htmlspecialchars($minOE($ordenExt['tecnico_taller'])) ?>
+                                                    <?php else: ?>
+                                                        <span class="text-muted">n/a</span>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td title="<?= htmlspecialchars($minOE($ordenExt['DetalleProducto'])) ?>">
+                                                    <?= htmlspecialchars(mb_strimwidth($minOE($ordenExt['DetalleProducto']), 0, 45, '...')) ?>
+                                                </td>
+                                                <td><?= htmlspecialchars($minOE($ordenExt['motivo_descripcion'])) ?></td>
+                                                <td title="<?= htmlspecialchars($ordenExt['entrega_nombre']) ?>">
+                                                    <?= htmlspecialchars($minOE($ordenExt['entrega_nombres'])) ?: 'n/a' ?>
+                                                </td>
+                                                <td title="<?= htmlspecialchars($ordenExt['recibe_nombre']) ?>">
+                                                    <?php if (!empty($ordenExt['recibe_nombres'])): ?>
+                                                        <?= htmlspecialchars($minOE($ordenExt['recibe_nombres'])) ?>
+                                                    <?php else: ?>
+                                                        <span class="text-muted">pendiente</span>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td class="text-right text-nowrap">$<?= number_format((float)$ordenExt['Precio'], 0, ',', '.') ?></td>
+                                                <td class="text-center">
+                                                    <span class="status-badge <?= $claseEstadoOE[$ordenExt['Estado']] ?? 'status-badge--secondary' ?>"
+                                                          style="text-transform: lowercase;">
+                                                        <?= $etiquetaEstadoOE[$ordenExt['Estado']] ?? htmlspecialchars($ordenExt['Estado']) ?>
+                                                    </span>
+                                                </td>
+                                                <td class="text-center">
+                                                    <div class="table__actions" style="justify-content: center;">
+                                                        <a href="<?= url('ordenes-externas/view/' . $ordenExt['IdOrden']) ?>"
+                                                           class="table__action-btn table__action-btn--info" title="Ver orden">
+                                                            <i class="fas fa-external-link-alt"></i>
+                                                        </a>
+                                                        <a href="<?= url('ordenes-externas/imprimir/' . $ordenExt['IdOrden']) ?>"
+                                                           target="_blank"
+                                                           class="table__action-btn table__action-btn--secondary" title="Imprimir remisión">
+                                                            <i class="fas fa-print"></i>
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

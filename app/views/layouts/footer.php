@@ -119,6 +119,61 @@
                 if (breadcrumbMain) {
                     breadcrumbMain.innerHTML = '<a href="<?= url('') ?>">Dashboard</a><span>/</span><span>Permisos</span>';
                 }
+            } else if (currentPath.includes('route=ordenes-externas/create')) {
+                if (pageTitleMain) pageTitleMain.textContent = 'Nueva Orden Externa';
+                if (breadcrumbMain) {
+                    breadcrumbMain.innerHTML = '<a href="<?= url('') ?>">Dashboard</a><span>/</span><a href="<?= url('ordenes-externas') ?>">Órdenes Externas</a><span>/</span><span>Nueva Orden</span>';
+                }
+            } else if (currentPath.includes('route=ordenes-externas/view/')) {
+                if (pageTitleMain) pageTitleMain.textContent = 'Detalle de la Orden';
+                if (breadcrumbMain) {
+                    breadcrumbMain.innerHTML = '<a href="<?= url('') ?>">Dashboard</a><span>/</span><a href="<?= url('ordenes-externas') ?>">Órdenes Externas</a><span>/</span><span>Detalle</span>';
+                }
+            } else if (currentPath.includes('route=ordenes-externas/edit/')) {
+                if (pageTitleMain) pageTitleMain.textContent = 'Editar Orden Externa';
+                if (breadcrumbMain) {
+                    breadcrumbMain.innerHTML = '<a href="<?= url('') ?>">Dashboard</a><span>/</span><a href="<?= url('ordenes-externas') ?>">Órdenes Externas</a><span>/</span><span>Editar</span>';
+                }
+            } else if (currentPath.includes('route=ordenes-externas')) {
+                if (pageTitleMain) pageTitleMain.textContent = 'Órdenes a Técnicos Externos';
+                if (breadcrumbMain) {
+                    breadcrumbMain.innerHTML = '<a href="<?= url('') ?>">Dashboard</a><span>/</span><span>Órdenes Externas</span>';
+                }
+            } else if (currentPath.includes('route=tecnicos-externos/create')) {
+                if (pageTitleMain) pageTitleMain.textContent = 'Nuevo Técnico Externo';
+                if (breadcrumbMain) {
+                    breadcrumbMain.innerHTML = '<a href="<?= url('') ?>">Dashboard</a><span>/</span><a href="<?= url('tecnicos-externos') ?>">Técnicos Externos</a><span>/</span><span>Nuevo Técnico</span>';
+                }
+            } else if (currentPath.includes('route=tecnicos-externos/view/')) {
+                if (pageTitleMain) pageTitleMain.textContent = 'Ficha del Técnico Externo';
+                if (breadcrumbMain) {
+                    breadcrumbMain.innerHTML = '<a href="<?= url('') ?>">Dashboard</a><span>/</span><a href="<?= url('tecnicos-externos') ?>">Técnicos Externos</a><span>/</span><span>Ficha</span>';
+                }
+            } else if (currentPath.includes('route=tecnicos-externos/edit/')) {
+                if (pageTitleMain) pageTitleMain.textContent = 'Editar Técnico Externo';
+                if (breadcrumbMain) {
+                    breadcrumbMain.innerHTML = '<a href="<?= url('') ?>">Dashboard</a><span>/</span><a href="<?= url('tecnicos-externos') ?>">Técnicos Externos</a><span>/</span><span>Editar</span>';
+                }
+            } else if (currentPath.includes('route=tecnicos-externos')) {
+                if (pageTitleMain) pageTitleMain.textContent = 'Técnicos Externos';
+                if (breadcrumbMain) {
+                    breadcrumbMain.innerHTML = '<a href="<?= url('') ?>">Dashboard</a><span>/</span><span>Técnicos Externos</span>';
+                }
+            } else if (currentPath.includes('route=configuracion/create-motivo-externo')) {
+                if (pageTitleMain) pageTitleMain.textContent = 'Nuevo Motivo';
+                if (breadcrumbMain) {
+                    breadcrumbMain.innerHTML = '<a href="<?= url('') ?>">Dashboard</a><span>/</span><a href="<?= url('configuracion') ?>">Configuración</a><span>/</span><a href="<?= url('configuracion/motivos-externos') ?>">Motivos</a><span>/</span><span>Nuevo</span>';
+                }
+            } else if (currentPath.includes('route=configuracion/edit-motivo-externo')) {
+                if (pageTitleMain) pageTitleMain.textContent = 'Editar Motivo';
+                if (breadcrumbMain) {
+                    breadcrumbMain.innerHTML = '<a href="<?= url('') ?>">Dashboard</a><span>/</span><a href="<?= url('configuracion') ?>">Configuración</a><span>/</span><a href="<?= url('configuracion/motivos-externos') ?>">Motivos</a><span>/</span><span>Editar</span>';
+                }
+            } else if (currentPath.includes('route=configuracion/motivos-externos')) {
+                if (pageTitleMain) pageTitleMain.textContent = 'Motivos de Orden Externa';
+                if (breadcrumbMain) {
+                    breadcrumbMain.innerHTML = '<a href="<?= url('') ?>">Dashboard</a><span>/</span><a href="<?= url('configuracion') ?>">Configuración</a><span>/</span><span>Motivos</span>';
+                }
             } else {
                 if (pageTitleMain) pageTitleMain.textContent = 'Dashboard';
                 if (breadcrumbMain) {
