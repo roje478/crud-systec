@@ -257,6 +257,17 @@
                                     <input type="hidden" name="IdEstadoEnTaller" value="<?= htmlspecialchars($servicio['IdEstadoEnTaller'] ?? '') ?>">
                                 <?php endif; ?>
 
+                                <!-- ID Servicio -->
+                                <div class="service-info__field">
+                                    <label class="service-info__label" for="id_servicio">
+                                        ID Servicio
+                                    </label>
+                                    <div class="service-info__input">
+                                        <i class="fas fa-hashtag service-info__icon"></i>
+                                        <input type="text" class="form__control" id="id_servicio" value="<?= htmlspecialchars($servicio['IdServicio'] ?? 'N/A') ?>" readonly disabled>
+                                    </div>
+                                </div>
+
                                 <!-- Cliente -->
                                 <div class="service-info__field">
                                     <label class="service-info__label" for="idcliente">
@@ -286,6 +297,28 @@
                                         <input type="text" class="form__control" id="idcliente_display" value="<?= htmlspecialchars($servicio['NoIdentificacionCliente'] ?? '') ?>" readonly disabled>
                                         <!-- Campo oculto para enviar el ID del cliente -->
                                         <input type="hidden" name="idcliente" value="<?= htmlspecialchars($servicio['NoIdentificacionCliente'] ?? '') ?>">
+                                    </div>
+                                </div>
+
+                                <!-- Teléfono Cliente -->
+                                <div class="service-info__field">
+                                    <label class="service-info__label" for="cliente_telefono">
+                                        Teléfono Cliente
+                                    </label>
+                                    <div class="service-info__input">
+                                        <i class="fas fa-phone service-info__icon"></i>
+                                        <input type="text" class="form__control" id="cliente_telefono" value="<?= htmlspecialchars($servicio['cliente_telefono'] ?? 'No especificado') ?>" readonly disabled>
+                                    </div>
+                                </div>
+
+                                <!-- Dirección Cliente -->
+                                <div class="service-info__field service-info__field--two-columns">
+                                    <label class="service-info__label" for="cliente_direccion">
+                                        Dirección Cliente
+                                    </label>
+                                    <div class="service-info__input">
+                                        <i class="fas fa-map-marker-alt service-info__icon"></i>
+                                        <input type="text" class="form__control" id="cliente_direccion" value="<?= htmlspecialchars($servicio['cliente_direccion'] ?? 'No especificada') ?>" readonly disabled>
                                     </div>
                                 </div>
 

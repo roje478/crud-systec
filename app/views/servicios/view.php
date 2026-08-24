@@ -129,6 +129,14 @@
                         <div class="service-info-card__body">
                             <div class="service-info-grid">
                                 <div class="service-info__field">
+                                    <label class="service-info__label">ID Servicio</label>
+                                    <div class="service-info__input">
+                                        <i class="fas fa-hashtag service-info__icon"></i>
+                                        <?= htmlspecialchars($servicio['IdServicio'] ?? 'N/A') ?>
+                                    </div>
+                                </div>
+
+                                <div class="service-info__field">
                                     <label class="service-info__label">Cliente</label>
                                     <div class="service-info__input">
                                         <i class="fas fa-user service-info__icon"></i>
@@ -141,6 +149,22 @@
                                     <div class="service-info__input">
                                         <i class="fas fa-id-card service-info__icon"></i>
                                         <?= htmlspecialchars($servicio['NoIdentificacionCliente'] ?? 'No especificado') ?>
+                                    </div>
+                                </div>
+
+                                <div class="service-info__field">
+                                    <label class="service-info__label">Teléfono Cliente</label>
+                                    <div class="service-info__input">
+                                        <i class="fas fa-phone service-info__icon"></i>
+                                        <?= htmlspecialchars($servicio['cliente_telefono'] ?? 'No especificado') ?>
+                                    </div>
+                                </div>
+
+                                <div class="service-info__field service-info__field--two-columns">
+                                    <label class="service-info__label">Dirección Cliente</label>
+                                    <div class="service-info__input">
+                                        <i class="fas fa-map-marker-alt service-info__icon"></i>
+                                        <?= htmlspecialchars($servicio['cliente_direccion'] ?? 'No especificada') ?>
                                     </div>
                                 </div>
 

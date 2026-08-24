@@ -166,6 +166,7 @@ class Servicio extends BaseModel {
                     s.*,
                     CONCAT(c.nombres, ' ', c.apellidos) as cliente_nombre,
                     c.telefono as cliente_telefono,
+                    c.direccion as cliente_direccion,
                     et.Descripcion as estado_descripcion,
                     ts.Descripcion as tipo_servicio_nombre,
                     CONCAT(t.nombres, ' ', t.apellidos) as tecnico_nombre
