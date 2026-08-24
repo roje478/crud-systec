@@ -2734,3 +2734,9 @@ input[type="checkbox"].form__control:focus {
         padding: 4px 8px;
     }
 }
+#tablaResultados{
+    font-size: 0.8rem!important;
+}
+#consultaTable_wrapper thead th{
+    font-size: 10px !important;
+}

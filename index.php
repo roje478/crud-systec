@@ -146,6 +146,10 @@ class RouterPrincipal {
                 } elseif ($action === 'cargar-resultados' && $method === 'POST') {
                     $controllerInstance->cargarResultados();
                 } elseif ($action === 'exportar-consulta' && $method === 'GET') {
+                    // Usar el método manual mejorado que escribe CSV sin fputcsv()
+                    $controllerInstance->exportarConsultaManual();
+                } elseif ($action === 'exportar-consulta-fputcsv' && $method === 'GET') {
+                    // Método original con fputcsv() (por si acaso)
                     $controllerInstance->exportarConsulta();
                 } elseif ($action === 'buscar-clientes' && $method === 'GET') {
                     $controllerInstance->buscarClientes();

@@ -586,6 +586,15 @@ class ServicioController extends BaseController {
      * Exportar resultados de consulta
      */
     public function exportarConsulta() {
+        // Deshabilitar límites de tiempo y buffer
+        set_time_limit(0);
+        ini_set('memory_limit', '256M');
+        
+        // Limpiar cualquier buffer de salida previo
+        if (ob_get_level()) {
+            ob_end_clean();
+        }
+        
         // Verificar si el usuario es técnico
         $perfilNombre = $_SESSION['usuario_perfil_nombre'] ?? '';
         $esTecnico = !empty($perfilNombre) && 
@@ -620,12 +629,24 @@ class ServicioController extends BaseController {
         header('Content-Disposition: attachment; filename="' . $filename . '"');
         header('Cache-Control: no-cache, must-revalidate');
         header('Expires: Sat, 26 Jul 1997 05:00:00 GMT');
+        header('Pragma: no-cache');
 
         // Crear archivo CSV
         $output = fopen('php://output', 'w');
         
+        // Desactivar buffering para el output
+        if (function_exists('apache_setenv')) {
+            @apache_setenv('no-gzip', '1');
+        }
+        @ini_set('zlib.output_compression', '0');
+        @ini_set('implicit_flush', '1');
+        
         // BOM para UTF-8
         fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+
+        // Delimitador y encerramiento para CSV (usar punto y coma puede funcionar mejor en Excel)
+        $delimiter = ',';  // Coma estándar
+        $enclosure = '"';  // Comillas dobles estándar
 
         // Encabezados
         fputcsv($output, [
@@ -642,28 +663,211 @@ class ServicioController extends BaseController {
             'Condiciones Entrega',
             'Solución',
             'Nota Interna'
-        ]);
+        ], $delimiter, $enclosure);
 
         // Datos
         foreach ($servicios as $servicio) {
-            fputcsv($output, [
+            // Exportar campos COMPLETOS sin truncar (hasta 1000+ caracteres)
+            // La tabla HTML muestra solo 20 caracteres, pero el CSV exporta TODO el contenido
+            
+            // Limpiar y preparar campos largos - eliminar saltos de línea que rompen el CSV
+            // Asegurar que se exporta TODO el contenido sin truncar
+            $problemaCompleto = !empty($servicio['Problema']) ? $servicio['Problema'] : 'N/A';
+            $problemaCompleto = trim($problemaCompleto);
+            $problemaCompleto = str_replace(["\r\n", "\r", "\n"], ' ', $problemaCompleto);
+            
+            $equipoCompleto = !empty($servicio['Equipo']) ? $servicio['Equipo'] : 'N/A';
+            $equipoCompleto = trim($equipoCompleto);
+            $equipoCompleto = str_replace(["\r\n", "\r", "\n"], ' ', $equipoCompleto);
+            
+            $solucionCompleta = !empty($servicio['Solucion']) ? $servicio['Solucion'] : '';
+            $solucionCompleta = trim($solucionCompleta);
+            $solucionCompleta = str_replace(["\r\n", "\r", "\n"], ' ', $solucionCompleta);
+            
+            $condicionesCompletas = !empty($servicio['CondicionesEntrega']) ? $servicio['CondicionesEntrega'] : '';
+            $condicionesCompletas = trim($condicionesCompletas);
+            $condicionesCompletas = str_replace(["\r\n", "\r", "\n"], ' ', $condicionesCompletas);
+            
+            $notaInternaCompleta = !empty($servicio['NotaInterna']) ? $servicio['NotaInterna'] : '';
+            $notaInternaCompleta = trim($notaInternaCompleta);
+            $notaInternaCompleta = str_replace(["\r\n", "\r", "\n"], ' ', $notaInternaCompleta);
+            
+            // Escribir fila al CSV - fputcsv maneja el escape automáticamente
+            $result = fputcsv($output, [
                 $servicio['IdServicio'],
                 $servicio['cliente_nombre'] ?? 'N/A',
                 $servicio['NoIdentificacionCliente'] ?? 'N/A',
-                $servicio['Equipo'] ?? 'N/A',
-                $servicio['Problema'] ?? 'N/A',
+                $equipoCompleto,
+                $problemaCompleto,  // CAMPO COMPLETO SIN TRUNCAR
                 $servicio['estado_descripcion'] ?? 'N/A',
                 $servicio['tecnico_nombre'] ?? 'Sin asignar',
                 $servicio['tipo_servicio_nombre'] ?? 'N/A',
                 DateHelper::extractDateTime($servicio['FechaIngreso']),
                 $servicio['Costo'] ?? '0',
-                $servicio['CondicionesEntrega'] ?? '',
-                $servicio['Solucion'] ?? '',
-                $servicio['NotaInterna'] ?? ''
-            ]);
+                $condicionesCompletas,
+                $solucionCompleta,  // CAMPO COMPLETO SIN TRUNCAR
+                $notaInternaCompleta
+            ], $delimiter, $enclosure);
+            
+            // Forzar flush para evitar problemas de buffering en textos largos
+            if ($result !== false) {
+                flush();
+            }
         }
 
         fclose($output);
+        exit;
+    }
+
+    /**
+     * Exportar resultados - Método alternativo escribiendo CSV manualmente
+     * Para asegurar que campos largos no se trunquen
+     */
+    public function exportarConsultaManual() {
+        // Configuración inicial
+        set_time_limit(0);
+        ini_set('memory_limit', '256M');
+        if (ob_get_level()) {
+            ob_end_clean();
+        }
+        
+        // Verificar permisos de usuario
+        $perfilNombre = $_SESSION['usuario_perfil_nombre'] ?? '';
+        $esTecnico = !empty($perfilNombre) && 
+                   (strtolower(trim($perfilNombre)) === 'técnico' || 
+                    strtolower(trim($perfilNombre)) === 'tecnico');
+        $esTecnicoAdministrador = !empty($perfilNombre) && 
+                                (strtolower(trim($perfilNombre)) === 'técnico administrador' || 
+                                 strtolower(trim($perfilNombre)) === 'tecnico administrador');
+
+        // Obtener filtros
+        $filtros = [
+            'fecha_desde' => $_GET['fecha_desde'] ?? '',
+            'fecha_hasta' => $_GET['fecha_hasta'] ?? '',
+            'tecnico_id' => $_GET['tecnico_id'] ?? '',
+            'cliente_id' => $_GET['cliente_id'] ?? '',
+            'cliente_nombre' => $_GET['cliente_nombre'] ?? '',
+            'estado_id' => $_GET['estado_id'] ?? '',
+            'tipo_servicio_id' => $_GET['tipo_servicio_id'] ?? '',
+            'equipo' => $_GET['equipo'] ?? '',
+            'problema' => $_GET['problema'] ?? '',
+            'servicio_id' => $_GET['servicio_id'] ?? ''
+        ];
+
+        // Obtener servicios
+        $servicios = $this->servicioModel->consultarServicios($filtros, $esTecnico, $esTecnicoAdministrador);
+
+        // Obtener columnas seleccionadas (si no hay, exportar todas)
+        $columnasParam = $_GET['columnas'] ?? '';
+        
+        // Log detallado para depuración
+        error_log("=== CSV EXPORT DEBUG ===");
+        error_log("GET params: " . print_r($_GET, true));
+        error_log("Columnas recibidas RAW: " . $columnasParam);
+        
+        // Si hay columnas especificadas, usarlas; si no, todas por defecto
+        if (!empty($columnasParam)) {
+            $columnasSeleccionadas = explode(',', $columnasParam);
+            error_log("Columnas parseadas: " . print_r($columnasSeleccionadas, true));
+        } else {
+            $columnasSeleccionadas = ['0','1','2','3','4','5','6','7','8','9'];
+            error_log("Usando columnas por defecto (todas)");
+        }
+        
+        // Mapeo de índices a nombres de columnas
+        $columnasDisponibles = [
+            '0' => ['header' => 'ID Servicio', 'key' => 'IdServicio'],
+            '1' => ['header' => 'Cliente', 'key' => 'cliente_nombre'],
+            '2' => ['header' => 'Equipo', 'key' => 'Equipo'],
+            '3' => ['header' => 'Problema', 'key' => 'Problema'],
+            '4' => ['header' => 'Solución', 'key' => 'Solucion'],
+            '5' => ['header' => 'Estado', 'key' => 'estado_descripcion'],
+            '6' => ['header' => 'Técnico', 'key' => 'tecnico_nombre'],
+            '7' => ['header' => 'Tipo Servicio', 'key' => 'tipo_servicio_nombre'],
+            '8' => ['header' => 'Fecha Ingreso', 'key' => 'FechaIngreso'],
+            '9' => ['header' => 'Costo', 'key' => 'Costo']
+        ];
+
+        // Headers HTTP
+        $filename = 'consulta_servicios_' . date('Y-m-d_H-i-s') . '.csv';
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Cache-Control: no-cache, must-revalidate');
+        header('Pragma: no-cache');
+
+        // BOM para UTF-8
+        echo chr(0xEF) . chr(0xBB) . chr(0xBF);
+
+        // Función helper para escapar campos CSV
+        $escapeCsv = function($field) {
+            $field = str_replace('"', '""', $field); // Duplicar comillas
+            $field = str_replace(["\r\n", "\r", "\n"], ' ', $field); // Eliminar saltos
+            return '"' . $field . '"'; // Encerrar en comillas
+        };
+
+        // Construir encabezados dinámicamente según columnas seleccionadas
+        $headers = [];
+        foreach ($columnasSeleccionadas as $colIndex) {
+            $colIndex = trim($colIndex); // Limpiar espacios
+            if (isset($columnasDisponibles[$colIndex])) {
+                $headers[] = $columnasDisponibles[$colIndex]['header'];
+                error_log("Agregando columna: $colIndex -> " . $columnasDisponibles[$colIndex]['header']);
+            } else {
+                error_log("Columna no encontrada: [$colIndex]");
+            }
+        }
+        
+        error_log("Headers finales: " . implode(',', $headers));
+        error_log("Total columnas a exportar: " . count($headers));
+        
+        echo implode(',', $headers) . "\n";
+
+        // Datos - escribir solo columnas seleccionadas
+        foreach ($servicios as $servicio) {
+            $row = [];
+            
+            // Procesar cada columna seleccionada
+            foreach ($columnasSeleccionadas as $colIndex) {
+                $colIndex = trim($colIndex); // Limpiar espacios
+                switch($colIndex) {
+                    case '0': // ID Servicio
+                        $row[] = $servicio['IdServicio'];
+                        break;
+                    case '1': // Cliente
+                        $row[] = $escapeCsv($servicio['cliente_nombre'] ?? 'N/A');
+                        break;
+                    case '2': // Equipo
+                        $row[] = $escapeCsv(trim($servicio['Equipo'] ?? 'N/A'));
+                        break;
+                    case '3': // Problema - COMPLETO
+                        $row[] = $escapeCsv(trim($servicio['Problema'] ?? 'N/A'));
+                        break;
+                    case '4': // Solución - COMPLETO
+                        $row[] = $escapeCsv(trim($servicio['Solucion'] ?? ''));
+                        break;
+                    case '5': // Estado
+                        $row[] = $escapeCsv($servicio['estado_descripcion'] ?? 'N/A');
+                        break;
+                    case '6': // Técnico
+                        $row[] = $escapeCsv($servicio['tecnico_nombre'] ?? 'Sin asignar');
+                        break;
+                    case '7': // Tipo Servicio
+                        $row[] = $escapeCsv($servicio['tipo_servicio_nombre'] ?? 'N/A');
+                        break;
+                    case '8': // Fecha Ingreso
+                        $row[] = $escapeCsv(DateHelper::extractDateTime($servicio['FechaIngreso']));
+                        break;
+                    case '9': // Costo
+                        $row[] = $servicio['Costo'] ?? '0';
+                        break;
+                }
+            }
+            
+            // Escribir fila solo con columnas seleccionadas
+            echo implode(',', $row) . "\n";
+            flush();
+        }
+
         exit;
     }
 

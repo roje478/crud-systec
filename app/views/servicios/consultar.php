@@ -172,13 +172,16 @@ $esAsesor = $esAsesor ?? false;
             </div>
 
             <div class="row mt-3">
-                <div class="col-12">
+                <div class="col-12 d-flex flex-wrap gap-2">
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-search me-2"></i>Consultar
                     </button>
                     <a href="<?= url('servicios/consultar') ?>" class="btn btn-outline-secondary">
                         <i class="fas fa-times me-2"></i>Limpiar Filtros
                     </a>
+                    <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#columnasModal">
+                        <i class="fas fa-columns me-2"></i>Seleccionar Columnas
+                    </button>
                     <?php if ($totalServicios > 0): ?>
                         <button type="button" class="btn btn-success" onclick="exportarResultados()">
                             <i class="fas fa-download me-2"></i>Exportar Resultados
@@ -187,6 +190,95 @@ $esAsesor = $esAsesor ?? false;
                 </div>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Modal para Seleccionar Columnas -->
+<div class="modal fade" id="columnasModal" tabindex="-1" aria-labelledby="columnasModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="columnasModalLabel">
+                    <i class="fas fa-columns me-2"></i>Seleccionar Columnas
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-3">Selecciona las columnas que deseas mostrar en la tabla y exportar:</p>
+                
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" value="0" id="col_id" checked>
+                    <label class="form-check-label fw-bold" for="col_id">#</label>
+                </div>
+                
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" value="1" id="col_cliente" checked>
+                    <label class="form-check-label" for="col_cliente">Cliente</label>
+                </div>
+                
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" value="2" id="col_equipo" checked>
+                    <label class="form-check-label" for="col_equipo">Equipo</label>
+                </div>
+                
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" value="3" id="col_problema" checked>
+                    <label class="form-check-label" for="col_problema">Problema</label>
+                </div>
+                
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" value="4" id="col_solucion" checked>
+                    <label class="form-check-label" for="col_solucion">Solución</label>
+                </div>
+                
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" value="5" id="col_estado" checked>
+                    <label class="form-check-label" for="col_estado">Estado</label>
+                </div>
+                
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" value="6" id="col_tecnico" checked>
+                    <label class="form-check-label" for="col_tecnico">Técnico</label>
+                </div>
+                
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" value="7" id="col_tipo_servicio" checked>
+                    <label class="form-check-label" for="col_tipo_servicio">Tipo Servicio</label>
+                </div>
+                
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" value="8" id="col_fecha" checked>
+                    <label class="form-check-label" for="col_fecha">Fecha Ingreso</label>
+                </div>
+                
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" value="9" id="col_costo" checked>
+                    <label class="form-check-label" for="col_costo">Costo</label>
+                </div>
+                
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" value="10" id="col_acciones" checked disabled>
+                    <label class="form-check-label" for="col_acciones">Acciones <small class="text-muted">(Siempre visible)</small></label>
+                </div>
+                
+                <hr class="my-3">
+                
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="seleccionarTodasColumnas()">
+                        <i class="fas fa-check-double me-1"></i>Seleccionar Todas
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deseleccionarTodasColumnas()">
+                        <i class="fas fa-times me-1"></i>Deseleccionar Todas
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="aplicarColumnas()" data-bs-dismiss="modal">
+                    <i class="fas fa-check me-2"></i>Aplicar
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -215,6 +307,7 @@ $esAsesor = $esAsesor ?? false;
                             <th>Cliente</th>
                             <th>Equipo</th>
                             <th>Problema</th>
+                            <th>Solución</th>
                             <th>Estado</th>
                             <th>Técnico</th>
                             <th>Tipo Servicio</th>
@@ -257,6 +350,35 @@ $esAsesor = $esAsesor ?? false;
     </div>
 </div>
 
+<!-- Estilos personalizados para campos largos -->
+<style>
+    /* Estilo para celdas con texto largo - Mostrar contenido completo */
+    #consultaTable td.texto-largo {
+        max-width: 400px;
+        white-space: normal;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        line-height: 1.4;
+        padding: 10px;
+    }
+    
+    /* Ajustar ancho de la tabla para scroll horizontal si es necesario */
+    #consultaTable {
+        width: 100% !important;
+    }
+    
+    /* Wrapper de la tabla con scroll horizontal */
+    .table-responsive {
+        overflow-x: auto;
+    }
+    
+    /* Hacer columnas ajustables */
+    #consultaTable th,
+    #consultaTable td {
+        vertical-align: middle;
+    }
+</style>
+
 <!-- DataTables CSS -->
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
@@ -276,6 +398,9 @@ $esAsesor = $esAsesor ?? false;
     let dataTable = null;
 
     $(document).ready(function() {
+        // Cargar columnas guardadas del localStorage
+        cargarColumnasSeleccionadas();
+        
         // Mostrar estado inicial
         mostrarEstadoInicial();
 
@@ -429,8 +554,10 @@ $esAsesor = $esAsesor ?? false;
             '<span class="text-muted">-</span>';
 
         const fechaIngreso = formatearFecha(servicio.FechaIngreso);
+        
+        // Mostrar contenido COMPLETO sin truncar (se ajustará con CSS)
         const problema = servicio.Problema || '';
-        const problemaCorto = problema.length > 30 ? problema.substring(0, 30) + '...' : problema;
+        const solucion = servicio.Solucion || '<span class="text-muted">-</span>';
 
         return `
         <tr>
@@ -442,11 +569,8 @@ $esAsesor = $esAsesor ?? false;
                 </div>
             </td>
             <td>${capitalizarTexto(servicio.Equipo || '-')}</td>
-            <td>
-                <span title="${problema}">
-                    ${capitalizarTexto(problemaCorto)}
-                </span>
-            </td>
+            <td class="texto-largo">${capitalizarTexto(problema)}</td>
+            <td class="texto-largo">${capitalizarTexto(solucion)}</td>
             <td>
                 <span class="badge ${statusClass}">
                     ${capitalizarTexto(servicio.estado_descripcion || 'N/A')}
@@ -506,6 +630,10 @@ $esAsesor = $esAsesor ?? false;
         }
 
         dataTable = $('#consultaTable').DataTable({
+            initComplete: function() {
+                // Aplicar columnas seleccionadas después de inicializar
+                aplicarColumnasAlCargar();
+            },
             // Configuración en español
             language: {
                 url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
@@ -520,7 +648,7 @@ $esAsesor = $esAsesor ?? false;
                     type: 'num'
                 },
                 {
-                    targets: [9], // Columna Acciones
+                    targets: [10], // Columna Acciones (ahora posición 10 porque agregamos Solución)
                     orderable: false,
                     searchable: false
                 }
@@ -613,9 +741,27 @@ $esAsesor = $esAsesor ?? false;
     function exportarResultados() {
         // Obtener los filtros actuales
         const filtros = $('#filtrosForm').serialize();
+        
+        // SIEMPRE obtener columnas del modal (la fuente de verdad)
+        let columnasSeleccionadas = obtenerColumnasSeleccionadas();
+        
+        // Si no hay columnas seleccionadas, exportar todas
+        if (columnasSeleccionadas.length === 0) {
+            alert('Por favor, selecciona al menos una columna en "Seleccionar Columnas"');
+            return;
+        }
+        
+        const columnasParam = '&columnas=' + columnasSeleccionadas.join(',');
 
         // Crear URL de exportación
-        const url = '<?= url('servicios/exportar-consulta') ?>?' + filtros;
+        const url = '<?= url('servicios/exportar-consulta') ?>?' + filtros + columnasParam;
+
+        // Mostrar mensaje de depuración
+        console.log('=== EXPORTACIÓN CSV ===');
+        console.log('Columnas seleccionadas:', columnasSeleccionadas);
+        console.log('Parámetro columnas:', columnasParam);
+        console.log('URL completa:', url);
+        alert('Exportando ' + columnasSeleccionadas.length + ' columnas. Revisa la consola (F12) para más detalles.');
 
         // Abrir en nueva ventana
         window.open(url, '_blank');
@@ -625,6 +771,121 @@ $esAsesor = $esAsesor ?? false;
     function limpiarFiltros() {
         $('#filtrosForm')[0].reset();
         mostrarEstadoInicial();
+    }
+    
+    // ========== FUNCIONES PARA SELECCIÓN DE COLUMNAS ==========
+    
+    // Obtener columnas seleccionadas
+    function obtenerColumnasSeleccionadas() {
+        const columnas = [];
+        $('#columnasModal input[type="checkbox"]:not(:disabled):checked').each(function() {
+            const val = $(this).val();
+            if (val && val !== '10') { // Excluir columna de Acciones
+                columnas.push(val);
+            }
+        });
+        console.log('Columnas seleccionadas del modal:', columnas);
+        return columnas;
+    }
+    
+    // Guardar columnas seleccionadas en localStorage
+    function guardarColumnasSeleccionadas() {
+        const columnas = obtenerColumnasSeleccionadas();
+        localStorage.setItem('columnasConsultaServicios', JSON.stringify(columnas));
+    }
+    
+    // Cargar columnas seleccionadas desde localStorage
+    function cargarColumnasSeleccionadas() {
+        const columnas = localStorage.getItem('columnasConsultaServicios');
+        if (columnas) {
+            try {
+                const columnasArray = JSON.parse(columnas);
+                console.log('Columnas cargadas desde localStorage:', columnasArray);
+                // Desmarcar todas primero
+                $('#columnasModal input[type="checkbox"]:not(:disabled)').prop('checked', false);
+                // Marcar las guardadas
+                columnasArray.forEach(function(col) {
+                    $('#columnasModal input[value="' + col + '"]').prop('checked', true);
+                });
+            } catch(e) {
+                console.error('Error al cargar columnas:', e);
+                // Si hay error, marcar todas por defecto
+                $('#columnasModal input[type="checkbox"]:not(:disabled)').prop('checked', true);
+            }
+        } else {
+            console.log('No hay columnas guardadas, marcando todas por defecto');
+            // Si no hay preferencias guardadas, marcar todas
+            $('#columnasModal input[type="checkbox"]:not(:disabled)').prop('checked', true);
+        }
+    }
+    
+    // Seleccionar todas las columnas
+    function seleccionarTodasColumnas() {
+        $('#columnasModal input[type="checkbox"]:not(:disabled)').prop('checked', true);
+    }
+    
+    // Deseleccionar todas las columnas
+    function deseleccionarTodasColumnas() {
+        $('#columnasModal input[type="checkbox"]:not(:disabled)').prop('checked', false);
+    }
+    
+    // Aplicar selección de columnas
+    function aplicarColumnas() {
+        const columnasSeleccionadas = obtenerColumnasSeleccionadas();
+        
+        // Guardar selección
+        guardarColumnasSeleccionadas();
+        
+        // Si hay tabla, aplicar cambios
+        if (dataTable) {
+            // Ocultar/mostrar columnas en DataTable
+            dataTable.columns().every(function(index) {
+                const visible = columnasSeleccionadas.includes(index.toString()) || index === 10; // Siempre mostrar columna de Acciones
+                this.visible(visible);
+            });
+        }
+        
+        // Mensaje de confirmación
+        const totalColumnas = columnasSeleccionadas.length;
+        mostrarMensaje('success', `Configuración guardada: ${totalColumnas} columnas seleccionadas`);
+    }
+    
+    // Aplicar columnas seleccionadas al cargar la tabla
+    function aplicarColumnasAlCargar() {
+        if (!dataTable) return;
+        
+        const columnasSeleccionadas = obtenerColumnasSeleccionadas();
+        
+        // Si no hay columnas seleccionadas, mostrar todas por defecto
+        if (columnasSeleccionadas.length === 0) {
+            return;
+        }
+        
+        // Ocultar/mostrar columnas sin mensaje
+        dataTable.columns().every(function(index) {
+            const visible = columnasSeleccionadas.includes(index.toString()) || index === 10; // Siempre mostrar columna de Acciones
+            this.visible(visible);
+        });
+    }
+    
+    // Función auxiliar para mostrar mensajes
+    function mostrarMensaje(tipo, mensaje) {
+        const alertClass = tipo === 'success' ? 'alert-success' : 'alert-info';
+        const icono = tipo === 'success' ? 'fa-check-circle' : 'fa-info-circle';
+        
+        const alerta = $(`
+            <div class="alert ${alertClass} alert-dismissible fade show" role="alert" style="position: fixed; top: 80px; right: 20px; z-index: 9999; min-width: 300px;">
+                <i class="fas ${icono} me-2"></i>${mensaje}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `);
+        
+        $('body').append(alerta);
+        
+        // Auto-cerrar después de 3 segundos
+        setTimeout(() => {
+            alerta.alert('close');
+        }, 3000);
     }
 </script>
 
