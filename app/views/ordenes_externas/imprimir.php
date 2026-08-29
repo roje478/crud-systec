@@ -42,16 +42,11 @@ $logoUrl = EmpresaHelper::getLogoUrl();
         /* La hoja en pantalla imita el tamaño real de media carta */
         .hoja {
             width: 14cm;
-            min-height: 21.6cm;
             background: #fff;
             margin: 0 auto;
             padding: 0.5cm;
             border: 1px solid #ddd;
-            display: flex;
-            flex-direction: column;
         }
-        /* Empuja firmas y pie al final de la hoja */
-        .cierre { margin-top: auto; }
 
         /* Encabezado --------------------------------------------------- */
         .encabezado {
@@ -141,7 +136,7 @@ $logoUrl = EmpresaHelper::getLogoUrl();
             display: flex;
             justify-content: space-between;
             gap: 20px;
-            padding-top: 30px;
+            margin-top: 26px;
         }
         .firma { flex: 1; text-align: center; }
         .firma__linea {
@@ -151,7 +146,7 @@ $logoUrl = EmpresaHelper::getLogoUrl();
         }
 
         .pie {
-            margin-top: 12px;
+            margin-top: 8px;
             border-top: 1px solid #ccc;
             padding-top: 4px;
             font-size: 7px;
@@ -185,8 +180,6 @@ $logoUrl = EmpresaHelper::getLogoUrl();
             }
             .hoja {
                 width: auto;
-                /* alto de media carta menos los márgenes de @page */
-                min-height: calc(8.5in - 1cm);
                 margin: 0;
                 padding: 0;
                 border: none;
