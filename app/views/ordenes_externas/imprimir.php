@@ -1,6 +1,8 @@
 <?php
 /**
  * Remisión imprimible de una orden externa.
+ *
+ * Formato MEDIA CARTA: 5.5in x 8.5in (14 x 21,6 cm), vertical.
  * Se renderiza SIN el layout del sistema (sidebar, menú, etc.).
  */
 $orden = $orden ?? [];
@@ -17,94 +19,153 @@ $logoUrl = EmpresaHelper::getLogoUrl();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Remisión <?= htmlspecialchars($orden['CodOrden'] ?? '') ?></title>
     <style>
+        /* ---------------------------------------------------------------
+           MEDIA CARTA: 5.5in x 8.5in = 14cm x 21,6cm (carta partida a la mitad)
+           --------------------------------------------------------------- */
+        @page {
+            size: 5.5in 8.5in;
+            margin: 0.5cm;
+        }
+
         * { box-sizing: border-box; }
+
         body {
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 12px;
-            color: #222;
+            font-size: 9.5px;
+            line-height: 1.3;
+            color: #000;
             margin: 0;
-            padding: 24px;
+            padding: 20px;
             background: #f5f5f5;
         }
+
+        /* La hoja en pantalla imita el tamaño real de media carta */
         .hoja {
+            width: 14cm;
+            min-height: 21.6cm;
             background: #fff;
-            max-width: 800px;
             margin: 0 auto;
-            padding: 32px;
+            padding: 0.5cm;
             border: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
         }
+        /* Empuja firmas y pie al final de la hoja */
+        .cierre { margin-top: auto; }
+
+        /* Encabezado --------------------------------------------------- */
         .encabezado {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            border-bottom: 2px solid #333;
-            padding-bottom: 16px;
-            margin-bottom: 20px;
+            gap: 10px;
+            border-bottom: 1.5px solid #000;
+            padding-bottom: 6px;
+            margin-bottom: 8px;
         }
-        .encabezado__logo img { max-height: 70px; max-width: 220px; }
-        .encabezado__empresa { font-size: 11px; line-height: 1.5; }
-        .encabezado__empresa strong { font-size: 15px; display: block; margin-bottom: 4px; }
-        .encabezado__orden { text-align: right; }
-        .encabezado__orden h1 { font-size: 16px; margin: 0 0 6px; text-transform: uppercase; }
-        .encabezado__orden .codigo { font-size: 20px; font-weight: bold; letter-spacing: 1px; }
+        .encabezado__logo img { max-height: 34px; max-width: 110px; }
+        .encabezado__empresa { font-size: 8px; line-height: 1.35; }
+        .encabezado__empresa strong {
+            font-size: 11.5px;
+            display: block;
+            margin-bottom: 1px;
+        }
+        .encabezado__orden { text-align: right; white-space: nowrap; }
+        .encabezado__orden h1 {
+            font-size: 9.5px;
+            margin: 0 0 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .encabezado__orden .codigo {
+            font-size: 17px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
         .estado {
             display: inline-block;
-            padding: 3px 10px;
-            border: 1px solid #333;
-            border-radius: 3px;
-            font-size: 10px;
+            padding: 1px 6px;
+            border: 1px solid #000;
+            border-radius: 2px;
+            font-size: 7px;
             text-transform: uppercase;
-            margin-top: 6px;
+            margin-top: 3px;
         }
-        table.datos { width: 100%; border-collapse: collapse; margin-bottom: 18px; }
-        table.datos th, table.datos td {
-            border: 1px solid #ccc;
-            padding: 7px 9px;
+
+        /* Tablas de datos ---------------------------------------------- */
+        table.datos {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 8px;
+        }
+        table.datos th,
+        table.datos td {
+            border: 1px solid #999;
+            padding: 4px 5px;
             text-align: left;
             vertical-align: top;
+            font-size: 9px;
         }
         table.datos th {
-            background: #f0f0f0;
+            background: #eee;
             width: 22%;
-            font-size: 11px;
+            font-size: 7.5px;
             text-transform: uppercase;
-            color: #555;
-        }
-        .bloque-titulo {
-            font-size: 11px;
-            text-transform: uppercase;
-            color: #555;
-            border-bottom: 1px solid #ccc;
-            padding-bottom: 4px;
-            margin: 18px 0 8px;
+            color: #333;
             font-weight: bold;
         }
-        .bloque-texto {
-            border: 1px solid #ccc;
-            padding: 10px;
-            min-height: 60px;
-            white-space: pre-wrap;
+
+        /* Bloques de texto --------------------------------------------- */
+        .bloque-titulo {
+            font-size: 7px;
+            text-transform: uppercase;
+            color: #333;
+            border-bottom: 1px solid #999;
+            padding-bottom: 2px;
+            margin: 8px 0 3px;
+            font-weight: bold;
+            letter-spacing: 0.3px;
         }
+        .bloque-texto {
+            border: 1px solid #999;
+            padding: 5px 6px;
+            min-height: 42px;
+            font-size: 9px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .bloque-texto--corto { min-height: 30px; }
+
+        /* Firmas ------------------------------------------------------- */
         .firmas {
             display: flex;
             justify-content: space-between;
-            gap: 40px;
-            margin-top: 60px;
+            gap: 20px;
+            padding-top: 30px;
         }
         .firma { flex: 1; text-align: center; }
-        .firma__linea { border-top: 1px solid #333; padding-top: 6px; font-size: 11px; }
+        .firma__linea {
+            border-top: 1px solid #000;
+            padding-top: 4px;
+            font-size: 8.5px;
+        }
+
         .pie {
-            margin-top: 30px;
-            border-top: 1px solid #ddd;
-            padding-top: 10px;
-            font-size: 10px;
-            color: #777;
+            margin-top: 12px;
+            border-top: 1px solid #ccc;
+            padding-top: 4px;
+            font-size: 7px;
+            color: #666;
             text-align: center;
         }
-        .acciones { max-width: 800px; margin: 0 auto 16px; text-align: right; }
-        .acciones button, .acciones a {
-            font-size: 13px;
-            padding: 8px 16px;
+
+        /* Barra de acciones (solo pantalla) ---------------------------- */
+        .acciones { width: 14cm; margin: 0 auto 12px; text-align: right; }
+        .acciones button,
+        .acciones a {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12px;
+            padding: 7px 14px;
             border: 1px solid #333;
             background: #333;
             color: #fff;
@@ -114,10 +175,26 @@ $logoUrl = EmpresaHelper::getLogoUrl();
             display: inline-block;
         }
         .acciones a { background: #fff; color: #333; }
+
+        /* Impresión ----------------------------------------------------- */
         @media print {
-            body { background: #fff; padding: 0; }
-            .hoja { border: none; max-width: none; padding: 0; }
+            body {
+                background: #fff;
+                padding: 0;
+                font-size: 9.5px;
+            }
+            .hoja {
+                width: auto;
+                /* alto de media carta menos los márgenes de @page */
+                min-height: calc(8.5in - 1cm);
+                margin: 0;
+                padding: 0;
+                border: none;
+            }
             .acciones { display: none; }
+            .encabezado,
+            .firmas,
+            table.datos { page-break-inside: avoid; }
         }
     </style>
 </head>
@@ -182,9 +259,9 @@ $logoUrl = EmpresaHelper::getLogoUrl();
     <div class="bloque-texto"><?= htmlspecialchars($orden['DetalleProducto'] ?? '') ?></div>
 
     <div class="bloque-titulo">Observaciones</div>
-    <div class="bloque-texto"><?= htmlspecialchars($orden['Observaciones'] ?? '') ?></div>
+    <div class="bloque-texto bloque-texto--corto"><?= htmlspecialchars($orden['Observaciones'] ?? '') ?></div>
 
-    <table class="datos" style="margin-top: 18px;">
+    <table class="datos" style="margin-top: 8px;">
         <tr>
             <th>Entrega</th>
             <td><?= htmlspecialchars($orden['entrega_nombre'] ?? '—') ?></td>
@@ -198,24 +275,26 @@ $logoUrl = EmpresaHelper::getLogoUrl();
         </tr>
     </table>
 
-    <div class="firmas">
-        <div class="firma">
-            <div class="firma__linea">
-                Firma de quien entrega<br>
-                <?= htmlspecialchars($orden['entrega_nombre'] ?? '') ?>
+    <div class="cierre">
+        <div class="firmas">
+            <div class="firma">
+                <div class="firma__linea">
+                    Firma de quien entrega<br>
+                    <?= htmlspecialchars($orden['entrega_nombre'] ?? '') ?>
+                </div>
+            </div>
+            <div class="firma">
+                <div class="firma__linea">
+                    Firma del técnico externo<br>
+                    <?= htmlspecialchars($orden['tecnico_nombre'] ?? '') ?>
+                </div>
             </div>
         </div>
-        <div class="firma">
-            <div class="firma__linea">
-                Firma del técnico externo<br>
-                <?= htmlspecialchars($orden['tecnico_nombre'] ?? '') ?>
-            </div>
-        </div>
-    </div>
 
-    <div class="pie">
-        Documento generado el <?= date('d/m/Y H:i') ?> &middot;
-        <?= htmlspecialchars($empresa['nombreempresa'] ?? '') ?>
+        <div class="pie">
+            Documento generado el <?= date('d/m/Y H:i') ?> &middot;
+            <?= htmlspecialchars($empresa['nombreempresa'] ?? '') ?>
+        </div>
     </div>
 </div>
 
